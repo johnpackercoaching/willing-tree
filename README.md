@@ -2,6 +2,16 @@
 
 A hybrid PWA for couples to grow their relationships through weekly intentional actions.
 
+## 🚀 Live Demo
+
+**Production URL**: https://willing-tree-pi.vercel.app
+
+## 📦 Deployment Status
+
+- **Platform**: Vercel
+- **Firebase Project**: willing-tree-fork
+- **Auto-Deploy**: Enabled (pushes to main branch auto-deploy)
+
 ## 🎯 Core Concept
 
 **Willing Tree** helps couples create deeper connections through:
@@ -191,10 +201,29 @@ npm run android
 - **Free**: 1 Innermost (relationship pairing)
 - **Premium** ($1/month): Up to 3 Innermosts + analytics
 
-## 🛠️ Development Commands
+## 🛠️ Development Setup
+
+### Prerequisites
+- Node.js 20+ and npm 10+
+- Firebase account
+- Vercel account (for deployment)
+
+### Environment Variables
+Create a `.env.local` file with:
+```env
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=willing-tree-fork.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=willing-tree-fork
+VITE_FIREBASE_STORAGE_BUCKET=willing-tree-fork.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=105791805598
+VITE_FIREBASE_APP_ID=your_app_id
+```
+
+### Development Commands
 
 ```bash
 # Development
+npm install             # Install dependencies
 npm run dev              # Start dev server
 npm run build           # Build for production  
 npm run preview         # Preview production build

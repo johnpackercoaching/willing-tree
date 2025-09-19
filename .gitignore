@@ -23,3 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# Vercel
+.vercel
+.env.vercel
+add-vercel-env.sh
