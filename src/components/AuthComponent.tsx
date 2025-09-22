@@ -121,7 +121,7 @@ export const AuthComponent: React.FC<AuthComponentProps> = ({ onAuthSuccess }) =
           await dataService.acceptInnermost(pairingCode, userProfile.uid);
           setSuccess('Logged in and pairing accepted!');
         } catch (pairError) {
-          console.log('Could not accept pairing:', pairError);
+          // console.log('Could not accept pairing:', pairError);
         }
       }
 

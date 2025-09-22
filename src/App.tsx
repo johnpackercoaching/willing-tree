@@ -31,9 +31,9 @@ const queryClient = new QueryClient({
 // Auth Guard Component
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, isInitialized, error } = useAuthStore();
-  
-  console.log('[AuthGuard] Render - isInitialized:', isInitialized, 'user:', user?.email, 'error:', error);
-  
+
+  // Debug logging removed
+
   if (!isInitialized) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -41,17 +41,17 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
       </div>
     );
   }
-  
+
   if (error) {
-    console.error('[AuthGuard] Auth error:', error);
+    // Debug logging removed - error handling still occurs
   }
-  
+
   if (!user) {
-    console.log('[AuthGuard] No user, redirecting to login');
+    // Debug logging removed
     return <Navigate to="/auth/login" replace />;
   }
-  
-  console.log('[AuthGuard] User authenticated, rendering children');
+
+  // Debug logging removed
   return <>{children}</>;
 };
 
@@ -68,18 +68,19 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
-  console.log('[App] Component rendering');
-  
+  // Debug logging removed
+
   useEffect(() => {
-    console.log('[App] useEffect - calling initializeAuth()');
+    // Debug logging removed
+    // Initialize auth asynchronously - errors are handled inside initializeAuth
     initializeAuth();
   }, []);
 
-  console.log('[App] Rendering QueryClientProvider and Router');
-  
+  // Debug logging removed
+
   // Use basename only in production (GitHub Pages)
   const basename = import.meta.env.PROD ? '/willing-tree' : '/';
-  console.log('[App] Router basename:', basename, 'Mode:', import.meta.env.MODE);
+  // Debug logging removed
   
   return (
     <QueryClientProvider client={queryClient}>

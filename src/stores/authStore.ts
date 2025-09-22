@@ -10,7 +10,7 @@ import {
   sendPasswordResetEmail,
   type User as FirebaseUser
 } from 'firebase/auth';
-import { auth } from '../config/firebase';
+import { initializeFirebase, getFirebaseAuth, connectToEmulators } from '../config/firebase';
 import { FirestoreService } from '../services/firestoreService';
 
 interface AuthState {
@@ -55,14 +55,14 @@ export const useAuthStore = create<AuthState>()(
         login: async (email: string, password: string) => {
           try {
             set({ isLoading: true, error: null });
-            console.log('[AuthStore] Attempting login for:', email);
+            // Debug logging removed
+            await initializeFirebase();
+            const auth = getFirebaseAuth();
             const credential = await signInWithEmailAndPassword(auth, email, password);
-            console.log('[AuthStore] Login successful:', credential.user.email);
+            // Debug logging removed
             // User will be set by the auth state listener
           } catch (error: any) {
-            console.error('[AuthStore] Login error:', error);
-            console.error('[AuthStore] Error code:', error.code);
-            console.error('[AuthStore] Error message:', error.message);
+            // Debug logging removed
             const message = error instanceof Error ? error.message : 'Login failed';
             set({ error: message });
             throw error;
@@ -74,6 +74,8 @@ export const useAuthStore = create<AuthState>()(
         signup: async (email: string, password: string, displayName: string, age: number, gender: 'male' | 'female' | 'other') => {
           try {
             set({ isLoading: true, error: null });
+            await initializeFirebase();
+            const auth = getFirebaseAuth();
             const credential = await createUserWithEmailAndPassword(auth, email, password);
             
             // Update Firebase Auth profile
@@ -108,6 +110,8 @@ export const useAuthStore = create<AuthState>()(
         logout: async () => {
           try {
             set({ isLoading: true, error: null });
+            await initializeFirebase();
+            const auth = getFirebaseAuth();
             await signOut(auth);
             set({ user: null, firebaseUser: null });
           } catch (error) {
@@ -122,6 +126,8 @@ export const useAuthStore = create<AuthState>()(
         resetPassword: async (email: string) => {
           try {
             set({ isLoading: true, error: null });
+            await initializeFirebase();
+            const auth = getFirebaseAuth();
             await sendPasswordResetEmail(auth, email);
           } catch (error) {
             const message = error instanceof Error ? error.message : 'Password reset failed';
@@ -148,50 +154,76 @@ export const useAuthStore = create<AuthState>()(
 // Initialize auth state listener
 let unsubscribe: (() => void) | null = null;
 
-export const initializeAuth = () => {
+// Configurable timeout (defaults to 10 seconds instead of 5)
+const AUTH_INIT_TIMEOUT = Number(import.meta.env.VITE_AUTH_INIT_TIMEOUT) || 10000;
+
+export const initializeAuth = async () => {
   if (unsubscribe) return; // Already initialized
 
-  console.log('[AuthStore] Starting auth initialization...');
-  
-  // Set a timeout to prevent infinite loading
-  const timeoutId = setTimeout(() => {
-    console.error('[AuthStore] Auth initialization timeout - forcing initialized state');
-    useAuthStore.getState().setInitialized(true);
-    useAuthStore.getState().setError('Authentication initialization timed out');
-  }, 5000); // 5 second timeout
+  // Debug logging removed
 
-  unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-    clearTimeout(timeoutId); // Clear timeout if auth responds
-    console.log('[AuthStore] Auth state changed:', firebaseUser?.email || 'no user');
-    useAuthStore.getState().setFirebaseUser(firebaseUser);
-    
-    if (firebaseUser) {
-      try {
-        // Fetch real user data from Firestore
-        const user = await FirestoreService.getUserProfile(firebaseUser.uid);
-        
-        if (user) {
-          console.log('[AuthStore] User profile loaded:', user.email);
-          useAuthStore.getState().setUser(user);
-        } else {
-          // User exists in Firebase Auth but not in Firestore
-          // This shouldn't happen in normal flow, but handle gracefully
-          console.warn('[AuthStore] User exists in Auth but not in Firestore');
+  try {
+    // CRITICAL FIX: Initialize Firebase BEFORE setting up auth listeners
+    await initializeFirebase();
+
+    // Connect to emulators if needed
+    await connectToEmulators();
+
+    // Now get the initialized auth instance
+    const auth = getFirebaseAuth();
+
+    // Set a timeout to prevent infinite loading (now 10 seconds by default)
+    const timeoutId = setTimeout(() => {
+      // Debug logging removed
+      useAuthStore.getState().setInitialized(true);
+      useAuthStore.getState().setError('Authentication initialization timed out');
+    }, AUTH_INIT_TIMEOUT);
+
+    // Set up the auth state listener
+    unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      clearTimeout(timeoutId); // Clear timeout if auth responds
+      // Debug logging removed
+      useAuthStore.getState().setFirebaseUser(firebaseUser);
+
+      if (firebaseUser) {
+        try {
+          // Fetch real user data from Firestore
+          const user = await FirestoreService.getUserProfile(firebaseUser.uid);
+
+          if (user) {
+            // Debug logging removed
+            useAuthStore.getState().setUser(user);
+          } else {
+            // User exists in Firebase Auth but not in Firestore
+            // This shouldn't happen in normal flow, but handle gracefully
+            // Debug logging removed
+            useAuthStore.getState().setUser(null);
+          }
+        } catch (error) {
+          // Debug logging removed
+          useAuthStore.getState().setError('Failed to load user profile');
           useAuthStore.getState().setUser(null);
         }
-      } catch (error) {
-        console.error('[AuthStore] Error fetching user profile:', error);
-        useAuthStore.getState().setError('Failed to load user profile');
+      } else {
+        // Debug logging removed
         useAuthStore.getState().setUser(null);
       }
-    } else {
-      console.log('[AuthStore] No authenticated user');
-      useAuthStore.getState().setUser(null);
-    }
-    
-    console.log('[AuthStore] Setting initialized to true');
-    useAuthStore.getState().setInitialized(true);
-  });
+
+      // Debug logging removed
+      useAuthStore.getState().setInitialized(true);
+    });
+
+    // Auth listener setup was successful
+    // If there's no user, auth state will fire immediately and set initialized to true
+    // If there is a user, it will fire once the user is loaded
+
+  } catch (error) {
+    // Failed to initialize Firebase
+    // Debug logging removed
+    const message = error instanceof Error ? error.message : 'Failed to initialize authentication';
+    useAuthStore.getState().setError(message);
+    useAuthStore.getState().setInitialized(true); // Set initialized even on error to unblock UI
+  }
 };
 
 // Cleanup function

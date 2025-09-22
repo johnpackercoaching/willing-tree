@@ -17,17 +17,17 @@ export interface InviteEmailData {
 export const sendInviteEmail = async (data: InviteEmailData): Promise<{ success: boolean; message: string }> => {
   // If email is disabled or no API key, return simulation
   if (!import.meta.env.VITE_ENABLE_EMAIL || !resend) {
-    console.log('📧 EMAIL SIMULATION MODE:');
-    console.log('To:', data.partnerEmail);
-    console.log('From:', data.senderEmail);
-    console.log('Invite Link:', data.appUrl);
+    // console.log('📧 EMAIL SIMULATION MODE:');
+    // console.log('To:', data.partnerEmail);
+    // console.log('From:', data.senderEmail);
+    // console.log('Invite Link:', data.appUrl);
     
     // Copy invite link to clipboard for easy sharing
     try {
       await navigator.clipboard.writeText(data.appUrl);
-      console.log('✅ Invite link copied to clipboard!');
+      // console.log('✅ Invite link copied to clipboard!');
     } catch (err) {
-      console.log('❌ Could not copy to clipboard:', err);
+      // console.log('❌ Could not copy to clipboard:', err);
     }
     
     // Show the invite link in an alert for testing

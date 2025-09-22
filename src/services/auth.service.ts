@@ -116,7 +116,7 @@ class AuthService {
       // Check if 2FA is enabled
       if (userProfile.twoFactorEnabled && multiFactor(user).enrolledFactors.length > 0) {
         // 2FA will be handled by Firebase UI automatically
-        console.log('2FA verification required');
+        // 2FA verification would be required here
       }
 
       return userProfile;

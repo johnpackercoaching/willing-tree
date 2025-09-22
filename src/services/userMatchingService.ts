@@ -31,7 +31,7 @@ export interface UserConnection {
 // Register a new user in the matching database
 export const registerUser = async (user: Omit<RegisteredUser, 'id' | 'createdAt' | 'lastActive'>): Promise<{ success: boolean; message: string }> => {
   if (!supabase || !import.meta.env.VITE_ENABLE_USER_MATCHING) {
-    console.log('📊 USER REGISTRATION SIMULATION:', user);
+    // console.log('📊 USER REGISTRATION SIMULATION:', user);
     return {
       success: true,
       message: 'User registration simulated successfully'
@@ -119,7 +119,7 @@ export const createConnection = async (
   inviteMessage?: string
 ): Promise<{ success: boolean; message: string; connectionId?: string }> => {
   if (!supabase || !import.meta.env.VITE_ENABLE_USER_MATCHING) {
-    console.log('🔗 CONNECTION SIMULATION:', { userEmail, partnerEmail, inviteMessage });
+    // console.log('🔗 CONNECTION SIMULATION:', { userEmail, partnerEmail, inviteMessage });
     return {
       success: true,
       message: 'Connection created successfully (simulated)',
@@ -214,7 +214,7 @@ export const getUserConnections = async (userEmail: string): Promise<UserConnect
 // Accept a connection request
 export const acceptConnection = async (connectionId: string): Promise<{ success: boolean; message: string }> => {
   if (!supabase || !import.meta.env.VITE_ENABLE_USER_MATCHING) {
-    console.log('✅ CONNECTION ACCEPTANCE SIMULATION:', connectionId);
+    // console.log('✅ CONNECTION ACCEPTANCE SIMULATION:', connectionId);
     return {
       success: true,
       message: 'Connection accepted successfully (simulated)'
