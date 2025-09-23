@@ -38,41 +38,83 @@ export const SelectWillingPage: FC = () => {
 
   const loadData = async () => {
     if (!innermostId || !user) return;
-    
+
     try {
       setIsLoading(true);
-      
+
       // Load innermost
       const innermosts = await FirestoreService.getUserInnermosts(user.id);
       const currentInnermost = innermosts.find(i => i.id === innermostId);
-      
+
       if (!currentInnermost) {
         toast.error('Innermost not found');
         navigate('/innermosts');
         return;
       }
-      
+
       setInnermost(currentInnermost);
-      
-      // Load willing box with wants
+
+      // Load willing box with partner's wishes
       const currentWillingBox = await FirestoreService.getWillingBox(innermostId);
-      if (!currentWillingBox || !currentWillingBox.wants || currentWillingBox.wants.length === 0) {
-        toast.error('No wants found. Please create your wants list first.');
+      if (!currentWillingBox) {
+        toast.error('No willing box found. Please create your wants list first.');
         navigate(`/innermosts/${innermostId}/wants`);
         return;
       }
-      
-      setWillingBox(currentWillingBox);
-      setWants(currentWillingBox.wants);
-      
-      // Load existing willing selections for current user
+
+      // Determine which partner we are and get the OTHER partner's wish list
       const isPartnerA = user.id === currentInnermost.partnerA;
-      const existingWilling = isPartnerA ? currentWillingBox.partnerAWilling : currentWillingBox.partnerBWilling;
-      
-      if (existingWilling) {
-        setSelectedWillingIds(existingWilling.map(w => w.wantId));
+
+      // Get partner's wish list - we select from our partner's wishes
+      let partnerWishes: Want[] = [];
+
+      // Try new format first
+      if (isPartnerA && currentWillingBox.partnerBWishList) {
+        partnerWishes = currentWillingBox.partnerBWishList;
+      } else if (!isPartnerA && currentWillingBox.partnerAWishList) {
+        partnerWishes = currentWillingBox.partnerAWishList;
       }
-      
+      // Fall back to legacy format
+      else if (isPartnerA && currentWillingBox.partnerBWishlist) {
+        partnerWishes = currentWillingBox.partnerBWishlist;
+      } else if (!isPartnerA && currentWillingBox.partnerAWishlist) {
+        partnerWishes = currentWillingBox.partnerAWishlist;
+      }
+      // Fall back to wants array (old format)
+      else if (currentWillingBox.wants) {
+        partnerWishes = currentWillingBox.wants;
+      }
+
+      if (!partnerWishes || partnerWishes.length === 0) {
+        toast.error('Your partner has not created their wish list yet.');
+        navigate(`/innermosts/${innermostId}`);
+        return;
+      }
+
+      setWillingBox(currentWillingBox);
+      setWants(partnerWishes);
+
+      // Load existing willing selections for current user
+      let existingWilling = null;
+
+      // Try new format first
+      if (isPartnerA && currentWillingBox.partnerAWillingList) {
+        existingWilling = currentWillingBox.partnerAWillingList;
+      } else if (!isPartnerA && currentWillingBox.partnerBWillingList) {
+        existingWilling = currentWillingBox.partnerBWillingList;
+      }
+      // Fall back to legacy format
+      else if (isPartnerA && currentWillingBox.partnerAWilling) {
+        existingWilling = currentWillingBox.partnerAWilling;
+      } else if (!isPartnerA && currentWillingBox.partnerBWilling) {
+        existingWilling = currentWillingBox.partnerBWilling;
+      }
+
+      if (existingWilling) {
+        // Handle both new format (wishId) and legacy format (wantId)
+        setSelectedWillingIds(existingWilling.map(w => w.wishId || w.wantId || '').filter(id => id));
+      }
+
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error('Failed to load willing selection');
@@ -93,31 +135,40 @@ export const SelectWillingPage: FC = () => {
 
   const saveWillingSelections = async () => {
     if (!willingBox || !user || !innermost) return;
-    
+
     if (selectedWillingIds.length === 0) {
       toast.error('Please select at least one item you\'re willing to work on');
       return;
     }
-    
+
     try {
       setIsSaving(true);
-      
+
       const isPartnerA = user.id === innermost.partnerA;
-      const willingItems = selectedWillingIds.map(wantId => ({
-        wantId,
-        effort: ''
+
+      // Create willing items with both new and legacy field names for compatibility
+      const willingItems = selectedWillingIds.map((wishId, index) => ({
+        wishId,  // New format
+        wantId: wishId,  // Legacy format
+        priority: index + 1,  // New format: 1-3 ranking
+        effort: '',  // Legacy format
+        effortLevel: undefined  // Optional new format field
       }));
-      
+
+      // Update with both new and legacy field names for compatibility
       const updatedWillingBox = {
         ...willingBox,
+        // New format fields
+        [isPartnerA ? 'partnerAWillingList' : 'partnerBWillingList']: willingItems,
+        // Legacy format fields
         [isPartnerA ? 'partnerAWilling' : 'partnerBWilling']: willingItems
       };
-      
+
       await FirestoreService.saveWillingBox(updatedWillingBox);
-      
+
       toast.success('Your willing selections have been saved!');
       navigate(`/innermosts/${innermostId}`);
-      
+
     } catch (error) {
       console.error('Error saving willing selections:', error);
       toast.error('Failed to save willing selections');
@@ -129,10 +180,12 @@ export const SelectWillingPage: FC = () => {
   const getWantsByCategory = () => {
     const categorized: Record<string, Want[]> = {};
     wants.forEach(want => {
-      if (!categorized[want.category]) {
-        categorized[want.category] = [];
+      // Handle cases where category might be undefined
+      const category = want.category || 'personal';
+      if (!categorized[category]) {
+        categorized[category] = [];
       }
-      categorized[want.category].push(want);
+      categorized[category].push(want);
     });
     return categorized;
   };
@@ -148,16 +201,18 @@ export const SelectWillingPage: FC = () => {
     );
   }
 
-  if (!wants.length) {
+  if (!wants || wants.length === 0) {
     return (
       <div className="p-4 text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">No Wants Found</h1>
-        <p className="text-gray-600 mb-6">You need to create your wants list first.</p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">No Partner Wishes Found</h1>
+        <p className="text-gray-600 mb-6">
+          Your partner needs to create their wish list before you can select what you're willing to work on.
+        </p>
         <button
-          onClick={() => navigate(`/innermosts/${innermostId}/wants`)}
+          onClick={() => navigate(`/innermosts/${innermostId}`)}
           className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg"
         >
-          Create Wants List
+          Back to Innermost
         </button>
       </div>
     );
@@ -265,7 +320,8 @@ export const SelectWillingPage: FC = () => {
       {/* Wants by Category */}
       <div className="space-y-8">
         {Object.entries(categorizedWants).map(([categoryId, categoryWants]) => {
-          const categoryInfo = CATEGORY_LABELS[categoryId as keyof typeof CATEGORY_LABELS];
+          const categoryInfo = CATEGORY_LABELS[categoryId as keyof typeof CATEGORY_LABELS] ||
+            { label: 'Personal Support', icon: '🌟' }; // Default fallback
           const selectedInCategory = categoryWants.filter(w => selectedWillingIds.includes(w.id)).length;
           
           return (

@@ -78,7 +78,11 @@ export const WeeklyGuessPage: FC = () => {
         if (userGuesses) {
           const guessData: GuessData = {};
           userGuesses.forEach(guess => {
-            guessData[guess.wantId] = guess.effort;
+            // Use wantId (or wishId if wantId doesn't exist) and effort fields
+            const id = guess.wantId || (guess as any).wishId;
+            if (id) {
+              guessData[id] = guess.effort || '';
+            }
           });
           setGuesses(guessData);
         }
@@ -104,7 +108,10 @@ export const WeeklyGuessPage: FC = () => {
     
     // Validate all guesses are made
     const partnerWilling = getPartnerWillingItems();
-    const missingGuesses = partnerWilling.filter(item => !guesses[item.wantId] || guesses[item.wantId].trim() === '');
+    const missingGuesses = partnerWilling.filter(item => {
+      const itemId = item.wantId || (item as any).wishId;
+      return !itemId || !guesses[itemId] || guesses[itemId].trim() === '';
+    });
     
     if (missingGuesses.length > 0) {
       toast.error(`Please make guesses for all ${partnerWilling.length} items`);
@@ -117,10 +124,12 @@ export const WeeklyGuessPage: FC = () => {
       const isPartnerA = user.id === innermost.partnerA;
       
       // Convert guesses to the required format
-      const userGuesses = Object.entries(guesses).map(([wantId, effort]) => ({
-        wantId,
-        effort: effort.trim()
-      }));
+      const userGuesses = Object.entries(guesses)
+        .filter(([_, effort]) => effort && effort.trim()) // Filter out empty efforts
+        .map(([wantId, effort]) => ({
+          wantId,
+          effort: effort.trim()
+        }));
       
       // Check if weekly score already exists
       const existingScore = weeklyScore;
@@ -165,26 +174,44 @@ export const WeeklyGuessPage: FC = () => {
 
   const getPartnerWillingItems = () => {
     if (!willingBox || !innermost || !user) return [];
-    
+
     const isPartnerA = user.id === innermost.partnerA;
     // Get the OTHER partner's willing items (what we need to guess about)
-    const partnerWilling = isPartnerA ? willingBox.partnerBWilling : willingBox.partnerAWilling;
-    
+    // Use new field names first, fallback to legacy field names
+    const partnerWilling = isPartnerA
+      ? (willingBox.partnerBWillingList || willingBox.partnerBWilling)
+      : (willingBox.partnerAWillingList || willingBox.partnerAWilling);
+
     return partnerWilling || [];
   };
 
   const getWantById = (wantId: string): Want | undefined => {
-    return willingBox?.wants?.find(w => w.id === wantId);
+    // Try to find in wants array first (legacy)
+    if (willingBox?.wants) {
+      return willingBox.wants.find(w => w.id === wantId);
+    }
+    // Otherwise check in the wish lists
+    const allWishes = [
+      ...(willingBox?.partnerAWishList || willingBox?.partnerAWishlist || []),
+      ...(willingBox?.partnerBWishList || willingBox?.partnerBWishlist || [])
+    ];
+    return allWishes.find(w => w.id === wantId);
   };
 
   const calculateScores = () => {
     if (!weeklyScore || !willingBox) return null;
     
+    // Get all wishes/wants for scoring calculation
+    const allWishes = willingBox.wants || [
+      ...(willingBox.partnerAWishList || willingBox.partnerAWishlist || []),
+      ...(willingBox.partnerBWishList || willingBox.partnerBWishlist || [])
+    ];
+
     return ScoringEngine.calculateWeeklyScores(
       weeklyScore,
-      willingBox.wants || [],
-      willingBox.partnerAWilling || [],
-      willingBox.partnerBWilling || []
+      allWishes,
+      willingBox.partnerAWillingList || willingBox.partnerAWilling || [],
+      willingBox.partnerBWillingList || willingBox.partnerBWilling || []
     );
   };
 
@@ -251,14 +278,18 @@ export const WeeklyGuessPage: FC = () => {
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-900">Your Guesses</h3>
           {getPartnerWillingItems().map(item => {
-            const want = getWantById(item.wantId);
+            // Get the ID (could be wantId or wishId)
+            const itemId = item.wantId || (item as any).wishId;
+            if (!itemId) return null;
+            const want = getWantById(itemId);
             if (!want) return null;
-            
-            const userGuess = guesses[item.wantId] || '';
-            const actualEffort = item.effort || '';
+
+            const userGuess = itemId ? (guesses[itemId] || '') : '';
+            // Get the effort level (could be effort or effortLevel)
+            const actualEffort = item.effort || (item as any).effortLevel || '';
             
             return (
-              <div key={item.wantId} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div key={itemId} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <div className="flex items-start gap-3 mb-3">
                   {want.isMostWanted && (
                     <Star className="w-5 h-5 text-yellow-600 fill-current mt-0.5" />
@@ -346,12 +377,14 @@ export const WeeklyGuessPage: FC = () => {
       ) : (
         <div className="space-y-4 mb-8">
           {partnerWilling.map((item, index) => {
-            const want = getWantById(item.wantId);
+            const itemId = item.wantId || (item as any).wishId;
+            if (!itemId) return null;
+            const want = getWantById(itemId);
             if (!want) return null;
             
             return (
               <motion.div
-                key={item.wantId}
+                key={itemId}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
@@ -375,8 +408,8 @@ export const WeeklyGuessPage: FC = () => {
                     How do you think your partner put effort into this?
                   </label>
                   <textarea
-                    value={guesses[item.wantId] || ''}
-                    onChange={(e) => handleGuessChange(item.wantId, e.target.value)}
+                    value={guesses[itemId] || ''}
+                    onChange={(e) => handleGuessChange(itemId, e.target.value)}
                     placeholder="Describe the specific effort you think they made..."
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
