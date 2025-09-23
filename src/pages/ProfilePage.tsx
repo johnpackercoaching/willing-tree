@@ -319,7 +319,14 @@ export const ProfilePage: FC = () => {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => SubscriptionService.redirectToCheckout(user, 'premium')}
+              onClick={async () => {
+                try {
+                  await SubscriptionService.redirectToCheckout(user, 'premium');
+                } catch (error) {
+                  console.error('Checkout error:', error);
+                  toast.error(error instanceof Error ? error.message : 'Unable to process payment. Please try again.');
+                }
+              }}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-md font-medium transition-all"
             >
               Upgrade to Premium

@@ -1,13 +1,45 @@
 import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import type { User } from '../types/index';
 
-// Initialize Stripe
-let stripePromise: Promise<Stripe | null>;
-const getStripe = () => {
-  if (!stripePromise) {
-    stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+// Lazy-load Stripe only when needed
+let stripePromise: Promise<Stripe | null> | null = null;
+
+/**
+ * Lazy-load Stripe SDK with error handling
+ * Only loads when payment functionality is actually needed
+ */
+const getStripe = async (): Promise<Stripe | null> => {
+  // Check if Stripe key exists
+  const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+
+  if (!stripeKey || stripeKey === 'undefined' || stripeKey === '') {
+    console.warn('Stripe publishable key not configured. Payment functionality will be disabled.');
+    return null;
   }
+
+  // Lazy initialization - only load Stripe when first needed
+  if (!stripePromise) {
+    try {
+      console.log('Loading Stripe SDK...');
+      stripePromise = loadStripe(stripeKey).catch((error) => {
+        console.error('Failed to load Stripe SDK:', error);
+        return null;
+      });
+    } catch (error) {
+      console.error('Error initializing Stripe:', error);
+      stripePromise = Promise.resolve(null);
+    }
+  }
+
   return stripePromise;
+};
+
+/**
+ * Check if Stripe is available and configured
+ */
+export const isStripeConfigured = (): boolean => {
+  const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+  return Boolean(stripeKey && stripeKey !== 'undefined' && stripeKey !== '');
 };
 
 export interface SubscriptionPlan {
@@ -94,6 +126,11 @@ export class SubscriptionService {
     successUrl: string,
     cancelUrl: string
   ): Promise<{ sessionId: string }> {
+    // Check if Stripe is configured before attempting checkout
+    if (!isStripeConfigured()) {
+      throw new Error('Payment processing is not configured. Please contact support.');
+    }
+
     const plan = SUBSCRIPTION_PLANS.find(p => p.id === planId);
     if (!plan || !plan.stripePriceId) {
       throw new Error('Invalid subscription plan');
@@ -103,7 +140,7 @@ export class SubscriptionService {
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
       const response = await fetch(`${apiBaseUrl}/api/create-checkout-session`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${user.id}` // Simple auth header
         },
@@ -124,7 +161,7 @@ export class SubscriptionService {
 
       const { sessionId } = await response.json();
       return { sessionId };
-      
+
     } catch (error) {
       console.error('Stripe checkout session creation failed:', error);
       throw new Error('Unable to start checkout process. Please try again.');
@@ -139,9 +176,15 @@ export class SubscriptionService {
     planId: 'premium'
   ): Promise<void> {
     try {
+      // Check if Stripe is configured
+      if (!isStripeConfigured()) {
+        throw new Error('Payment processing is not configured. Please contact support.');
+      }
+
+      // Lazy-load Stripe only when user initiates checkout
       const stripe = await getStripe();
       if (!stripe) {
-        throw new Error('Stripe failed to initialize');
+        throw new Error('Payment system is currently unavailable. Please try again later or contact support.');
       }
 
       const baseUrl = window.location.origin;
@@ -154,15 +197,19 @@ export class SubscriptionService {
 
       // Redirect to Stripe checkout
       const { error } = await stripe.redirectToCheckout({ sessionId });
-      
+
       if (error) {
         console.error('Stripe redirect error:', error);
         throw new Error(error.message || 'Checkout redirect failed');
       }
-      
+
     } catch (error) {
       console.error('Checkout error:', error);
-      throw new Error(error instanceof Error ? error.message : 'Failed to start checkout process');
+      // Provide user-friendly error message
+      if (error instanceof Error && error.message.includes('Payment')) {
+        throw error; // Re-throw our custom error messages
+      }
+      throw new Error('Unable to process payment at this time. Please try again later.');
     }
   }
 
@@ -263,5 +310,12 @@ export class SubscriptionService {
       { feature: 'Priority Support', free: false, premium: true },
       { feature: 'Custom Categories', free: false, premium: true }
     ];
+  }
+
+  /**
+   * Check if payment processing is available
+   */
+  static isPaymentAvailable(): boolean {
+    return isStripeConfigured();
   }
 }
