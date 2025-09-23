@@ -35,3 +35,8 @@ dist-ssr
 .vercel
 .env.vercel
 add-vercel-env.sh
+
+# Playwright test results
+test-results/
+playwright-report/
+playwright/.cache/

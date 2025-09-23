@@ -1,0 +1,44 @@
+# Willing Tree Project Memory
+# This file stores important project information, URLs, and context
+# Last updated: 2025-09-23
+
+project:
+  name: willing-tree
+  description: Relationship growth app with weekly intentional actions
+  github_url: https://github.com/johnpackercoaching/willing-tree-aug31-fork
+  github_repo: johnpackercoaching/willing-tree-aug31-fork
+
+firebase:
+  project_id: willing-tree-fork
+  project_name: "Willing Tree Fork"
+  console_url: https://console.firebase.google.com/project/willing-tree-fork
+  app_id: "1:105791805598:web:acf539a97f52cf9bab438f"
+  app_nickname: "Willing Tree"
+
+vercel:
+  account_name: johnpackercoaching
+  team_slug: john-packers-projects
+  project_url: https://vercel.com/john-packers-projects/willing-tree
+  deployments_url: https://vercel.com/john-packers-projects/willing-tree/deployments
+  environment_vars_url: https://vercel.com/john-packers-projects/willing-tree/settings/environment-variables
+  production_url: https://willing-tree-pi.vercel.app/
+  team_dashboard: https://vercel.com/john-packers-projects
+
+important_notes:
+  - "Using willing-tree-fork Firebase project, NOT willing-tree"
+  - "Vercel deploys to root domain, no basename needed"
+  - "Firebase Web App ID: 1:105791805598:web:acf539a97f52cf9bab438f"
+  - "Git remote 'origin' currently points to willing-tree.git, not willing-tree-aug31-fork"
+  - "Production URL: https://willing-tree-pi.vercel.app/"
+
+common_commands:
+  check_vercel_env: "vercel env ls"
+  pull_vercel_env: "vercel env pull .env.production"
+  deploy_to_vercel: "vercel --prod"
+  view_logs: "vercel logs"
+
+issues_resolved:
+  2025-09-23:
+    - "Fixed Firebase project mismatch (was using willing-tree instead of willing-tree-fork)"
+    - "Removed Router basename for Vercel deployment"
+    - "Updated Firebase configuration in .env"

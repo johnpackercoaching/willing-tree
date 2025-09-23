@@ -190,8 +190,8 @@ function App() {
     return <LoadingSpinner message="Starting application..." />;
   }
 
-  // Use basename only in production (GitHub Pages)
-  const basename = import.meta.env.PROD ? '/willing-tree' : '/';
+  // No basename needed for Vercel deployment (deploys to root domain)
+  const basename = '/';
 
   return (
     <QueryClientProvider client={queryClient}>
