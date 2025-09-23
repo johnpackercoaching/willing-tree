@@ -16,5 +16,8 @@ if (root) {
   );
 } else {
   console.error('Root element not found!');
-  document.body.innerHTML = '<h1 style="color:red">Root element not found!</h1>';
+  const errorElement = document.createElement('h1');
+  errorElement.style.color = 'red';
+  errorElement.textContent = 'Root element not found!';
+  document.body.appendChild(errorElement);
 }
