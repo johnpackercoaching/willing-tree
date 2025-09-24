@@ -40,3 +40,9 @@ add-vercel-env.sh
 test-results/
 playwright-report/
 playwright/.cache/
+
+# Project memory and deployment checklist (contains hardcoded values)
+PROJECT_MEMORY.yaml
+.env.vercel-check
+.env.vercel-verify
+deployment-check.sh
