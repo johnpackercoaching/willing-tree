@@ -3,17 +3,22 @@ import { useAuthStore } from '../stores/authStore';
 import { SubscriptionService } from '../services/subscriptionService';
 import { FirestoreService } from '../services/firestoreService';
 import { toast } from 'react-hot-toast';
-import { 
-  Settings as SettingsIcon, 
-  Bell, 
-  Shield, 
-  Smartphone, 
-  CreditCard, 
+import {
+  Settings as SettingsIcon,
+  Bell,
+  Shield,
+  Smartphone,
+  CreditCard,
   Download,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  Crown,
+  Lock,
+  BarChart3
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { usePremiumFeature, PremiumFeatures } from '../hooks/usePremiumFeature';
+import { useNavigate } from 'react-router-dom';
 
 interface AppSettings {
   emailNotifications: boolean;
@@ -24,6 +29,8 @@ interface AppSettings {
 
 export const SettingsPage: FC = () => {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
+  const dataExportFeature = usePremiumFeature(PremiumFeatures.DATA_EXPORT);
   const [settings, setSettings] = useState<AppSettings>({
     emailNotifications: true,
     pushNotifications: true,
@@ -93,13 +100,19 @@ export const SettingsPage: FC = () => {
 
   const exportData = async () => {
     if (!user) return;
-    
+
+    // Check if user has premium access
+    if (dataExportFeature.requiresUpgrade) {
+      dataExportFeature.showUpgradePrompt();
+      return;
+    }
+
     try {
       toast.success('Data export started. This may take a few minutes.');
-      
+
       // In a real implementation, you'd call a backend endpoint to generate
       // a comprehensive data export including all user data, innermosts, etc.
-      
+
       // For demo, we'll create a simple JSON export
       const exportData = {
         user: {
@@ -114,7 +127,7 @@ export const SettingsPage: FC = () => {
         exportedAt: new Date().toISOString(),
         note: 'This is a demo export. In production, this would include all your Innermost data, scores, and preferences.'
       };
-      
+
       const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -124,9 +137,9 @@ export const SettingsPage: FC = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       toast.success('Data exported successfully!');
-      
+
     } catch (error) {
       console.error('Error exporting data:', error);
       toast.error('Failed to export data');
@@ -304,19 +317,64 @@ export const SettingsPage: FC = () => {
         </h3>
         
         <div className="space-y-3">
-          <button
-            onClick={exportData}
-            className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors"
-          >
-            <Download className="w-5 h-5 text-green-600" />
-            <div>
-              <p className="font-medium text-gray-900">Export My Data</p>
-              <p className="text-sm text-gray-600">Download all your data in JSON format</p>
+          {/* Data Export - Premium Feature */}
+          {dataExportFeature.requiresUpgrade ? (
+            <div className="relative">
+              <button
+                onClick={() => {
+                  dataExportFeature.showUpgradePrompt();
+                  setTimeout(() => navigate('/subscription'), 3000);
+                }}
+                className="w-full flex items-center gap-3 p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 relative overflow-hidden group"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <Lock className="w-5 h-5 text-gray-400" />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-500 flex items-center gap-2">
+                    Export My Data
+                    <Crown className="w-4 h-4 text-purple-600" />
+                    <span className="text-xs bg-gradient-to-r from-purple-600 to-pink-600 text-white px-2 py-0.5 rounded-full">Premium</span>
+                  </p>
+                  <p className="text-sm text-gray-400">Download all your data in JSON format - Upgrade to access</p>
+                </div>
+              </button>
             </div>
-          </button>
+          ) : (
+            <button
+              onClick={exportData}
+              className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors group"
+            >
+              <Download className="w-5 h-5 text-green-600 group-hover:scale-110 transition-transform" />
+              <div className="flex-1">
+                <p className="font-medium text-gray-900 flex items-center gap-2">
+                  Export My Data
+                  <Crown className="w-4 h-4 text-purple-600" />
+                </p>
+                <p className="text-sm text-gray-600">Download all your data in JSON format</p>
+              </div>
+            </button>
+          )}
           
           <div className="border-t border-gray-200 my-4"></div>
-          
+
+          {/* Analytics Dashboard Link */}
+          <button
+            onClick={() => navigate('/analytics')}
+            className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors group"
+          >
+            <BarChart3 className="w-5 h-5 text-purple-600 group-hover:scale-110 transition-transform" />
+            <div className="flex-1">
+              <p className="font-medium text-gray-900 flex items-center gap-2">
+                Analytics Dashboard
+                <Crown className="w-4 h-4 text-purple-600" />
+                <span className="text-xs bg-gradient-to-r from-purple-600 to-pink-600 text-white px-2 py-0.5 rounded-full">Premium</span>
+              </p>
+              <p className="text-sm text-gray-600">View relationship insights and trends</p>
+            </div>
+          </button>
+
+          <div className="border-t border-gray-200 my-4"></div>
+
           <div className="text-sm text-gray-500">
             <p>App Version: 1.0.0</p>
             <p>Last Updated: {new Date().toLocaleDateString()}</p>

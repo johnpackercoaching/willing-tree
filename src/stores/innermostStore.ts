@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import type { Innermost, PairingInvitation, WillingBox, WeeklyScore } from '../types/index';
+import { SubscriptionService } from '../services/subscriptionService';
+import { useAuthStore } from './authStore';
 
 interface InnermostState {
   // Data
@@ -91,7 +93,15 @@ export const useInnermostStore = create<InnermostState>()(
 
       canAddInnermost: () => {
         const { innermosts } = get();
-        return innermosts.length < 3; // Max 3 Innermosts per user
+        const user = useAuthStore.getState().user;
+
+        // If no user is logged in, deny creation
+        if (!user) {
+          return false;
+        }
+
+        // Use SubscriptionService to check based on subscription status
+        return SubscriptionService.canCreateInnermost(user, innermosts.length);
       },
 
       // Invitation management

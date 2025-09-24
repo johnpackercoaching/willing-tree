@@ -20,6 +20,7 @@ import { SelectWillingPage } from './pages/willing/SelectWillingPage';
 import { WeeklyGuessPage } from './pages/scoring/WeeklyGuessPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
+import { AnalyticsPage } from './pages/AnalyticsPage';
 
 // Create React Query client with error handling
 const queryClient = new QueryClient({
@@ -283,7 +284,15 @@ function App() {
                 </Layout>
               </AuthGuard>
             } />
-            
+
+            <Route path="/analytics" element={
+              <AuthGuard>
+                <Layout>
+                  <AnalyticsPage />
+                </Layout>
+              </AuthGuard>
+            } />
+
             {/* Catch all - redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>

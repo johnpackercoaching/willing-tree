@@ -5,8 +5,10 @@ import { FirestoreService } from '../../services/firestoreService';
 import { ScoringEngine } from '../../core/scoring';
 import type { Want, WillingBox, Innermost, WeeklyScore } from '../../types/index';
 import { toast } from 'react-hot-toast';
-import { ArrowLeft, Star, Trophy, Clock, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Star, Trophy, Clock, CheckCircle, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePremiumFeature, PremiumFeatures } from '../../hooks/usePremiumFeature';
+import { UpgradePrompt } from '../../components/premium/UpgradePrompt';
 
 interface GuessData {
   [wantId: string]: string;
@@ -16,7 +18,7 @@ export const WeeklyGuessPage: FC = () => {
   const { innermostId, weekNumber } = useParams<{ innermostId: string; weekNumber: string }>();
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  
+
   const [innermost, setInnermost] = useState<Innermost | null>(null);
   const [willingBox, setWillingBox] = useState<WillingBox | null>(null);
   const [guesses, setGuesses] = useState<GuessData>({});
@@ -24,16 +26,41 @@ export const WeeklyGuessPage: FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
   const currentWeekNum = weekNumber ? parseInt(weekNumber) : 1;
+
+  // Check premium feature access
+  const extendedHistory = usePremiumFeature(PremiumFeatures.EXTENDED_HISTORY);
+
+  // Get current week number (same logic as in services)
+  const getCurrentWeekNumber = (): number => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 1);
+    const diff = now.getTime() - start.getTime();
+    const oneWeek = 1000 * 60 * 60 * 24 * 7;
+    return Math.floor(diff / oneWeek) + 1;
+  };
+
+  const actualCurrentWeek = getCurrentWeekNumber();
+  const isViewingPastWeek = currentWeekNum < actualCurrentWeek;
 
   useEffect(() => {
     if (!innermostId || !user) {
       navigate('/innermosts');
       return;
     }
+
+    // Check if free user is trying to access historical data
+    if (isViewingPastWeek && !extendedHistory.isAvailable) {
+      setShowUpgradePrompt(true);
+      // Don't load data for past weeks if user doesn't have access
+      setIsLoading(false);
+      return;
+    }
+
     loadData();
-  }, [innermostId, user, weekNumber]);
+  }, [innermostId, user, weekNumber, isViewingPastWeek, extendedHistory.isAvailable]);
 
   const loadData = async () => {
     if (!innermostId || !user) return;
@@ -226,12 +253,52 @@ export const WeeklyGuessPage: FC = () => {
     );
   }
 
+  // Show upgrade prompt if free user is trying to access past weeks
+  if (showUpgradePrompt && isViewingPastWeek) {
+    return (
+      <div className="p-4 max-w-2xl mx-auto">
+        <div className="mb-6">
+          <button
+            onClick={() => navigate(`/innermosts/${innermostId}/weekly-guess/${actualCurrentWeek}`)}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Current Week
+          </button>
+        </div>
+
+        <UpgradePrompt
+          feature="Extended History"
+          description="Access your complete scoring history and track your relationship progress over time. Free users can only view the current week."
+          benefits={[
+            'View all past weekly scores',
+            'Track long-term relationship trends',
+            'Compare performance across weeks',
+            'Export historical data',
+            'Analyze patterns in your guessing accuracy',
+            'See improvement over time'
+          ]}
+          showModal={false}
+        />
+
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => navigate(`/innermosts/${innermostId}/weekly-guess/${actualCurrentWeek}`)}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold"
+          >
+            Go to Current Week (Week {actualCurrentWeek})
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (showResults && weeklyScore) {
     const scores = calculateScores();
     const isPartnerA = user?.id === innermost?.partnerA;
     const userScore = isPartnerA ? scores?.partnerAScore || 0 : scores?.partnerBScore || 0;
     const partnerScore = isPartnerA ? scores?.partnerBScore || 0 : scores?.partnerAScore || 0;
-    
+
     return (
       <div className="p-4 max-w-2xl mx-auto">
         <div className="mb-6">
@@ -242,11 +309,40 @@ export const WeeklyGuessPage: FC = () => {
             <ArrowLeft className="w-4 h-4" />
             Back to Innermost
           </button>
-          
+
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Week {currentWeekNum} Results</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Week {currentWeekNum} Results
+              {isViewingPastWeek && (
+                <span className="ml-2 text-sm font-normal text-gray-500">
+                  (Historical)
+                </span>
+              )}
+            </h1>
             <p className="text-gray-600">Here's how you both did this week!</p>
           </div>
+
+          {/* Week navigation for premium users viewing past weeks */}
+          {extendedHistory.isAvailable && isViewingPastWeek && (
+            <div className="flex items-center justify-center gap-4 mt-4">
+              {currentWeekNum > 1 && (
+                <button
+                  onClick={() => navigate(`/innermosts/${innermostId}/weekly-guess/${currentWeekNum - 1}`)}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  ← Week {currentWeekNum - 1}
+                </button>
+              )}
+              {currentWeekNum < actualCurrentWeek && (
+                <button
+                  onClick={() => navigate(`/innermosts/${innermostId}/weekly-guess/${currentWeekNum + 1}`)}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  Week {currentWeekNum + 1} →
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
@@ -340,12 +436,42 @@ export const WeeklyGuessPage: FC = () => {
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Clock className="w-6 h-6 text-green-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Week {currentWeekNum} Guessing Game</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Week {currentWeekNum} Guessing Game
+              {isViewingPastWeek && extendedHistory.isAvailable && (
+                <span className="ml-2 text-sm font-normal text-gray-500">
+                  (Historical)
+                </span>
+              )}
+            </h1>
           </div>
           <p className="text-gray-600">
-            Guess how your partner put effort into the items they selected.
-            Correct guesses earn you points!
+            {isViewingPastWeek
+              ? "Review how your partner put effort into the items they selected."
+              : "Guess how your partner put effort into the items they selected. Correct guesses earn you points!"
+            }
           </p>
+
+          {/* Show lock indicator for past weeks if not premium */}
+          {!extendedHistory.isAvailable && currentWeekNum !== actualCurrentWeek && (
+            <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center gap-3">
+              <Lock className="w-5 h-5 text-yellow-600" />
+              <div className="text-left flex-1">
+                <p className="text-sm font-medium text-yellow-900">
+                  Historical weeks are locked
+                </p>
+                <p className="text-xs text-yellow-700">
+                  Upgrade to premium to view past weekly scores
+                </p>
+              </div>
+              <button
+                onClick={() => extendedHistory.showUpgradePrompt()}
+                className="text-yellow-600 hover:text-yellow-700 text-sm font-medium"
+              >
+                Upgrade
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

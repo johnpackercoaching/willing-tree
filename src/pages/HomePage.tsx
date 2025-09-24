@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useInnermostStore } from '../stores/innermostStore';
 import { Button } from '../components/Button';
-import { TreePine, Plus, Users, Trophy, Leaf } from 'lucide-react';
+import { TreePine, Plus, Users, Trophy, Leaf, BarChart3 } from 'lucide-react';
 
 export const HomePage: FC = () => {
   const { user } = useAuthStore();
@@ -108,11 +108,17 @@ export const HomePage: FC = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <Link to="/innermosts">
           <Button variant="ghost" fullWidth className="h-16 flex-col">
             <TreePine className="w-6 h-6 mb-1" />
             <span className="text-xs">Trees</span>
+          </Button>
+        </Link>
+        <Link to="/analytics">
+          <Button variant="ghost" fullWidth className="h-16 flex-col">
+            <BarChart3 className="w-6 h-6 mb-1" />
+            <span className="text-xs">Analytics</span>
           </Button>
         </Link>
         <Link to="/profile">
