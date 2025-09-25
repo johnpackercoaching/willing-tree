@@ -87,6 +87,41 @@ No robots.txt file exists, causing the server to return HTML instead of crawling
 
 ---
 
+## WTFIX-002-CONSOLE-ERRORS
+
+**Status**: ✅ FIXED (2025-09-25)
+**Severity**: HIGH
+**Test**: tests/e2e/production-health.spec.ts:11
+
+#### Summary
+Console errors appearing in production build from debug logging and service worker registration.
+
+#### Resolution
+Wrapped all console statements in development environment checks using `import.meta.env.DEV` or `isDevelopment` constants.
+
+#### Files Modified
+- 11 source files updated with conditional logging
+- Service worker silent in production
+- Firebase config properly gated
+
+---
+
+## WTFIX-003-SENSITIVE-DATA
+
+**Status**: ✅ FIXED (2025-09-25)
+**Severity**: MEDIUM
+**Test**: tests/e2e/production-health.spec.ts:85
+
+#### Summary
+HTML contained sensitive patterns like "localhost", "token", and console.log statements.
+
+#### Resolution
+- Removed localhost references from Firebase emulator config
+- Eliminated console.log from service worker registration
+- Updated test to handle legitimate Firebase auth iframes
+
+---
+
 ## Test Results Summary
 
 ### WTTEST-001-PROD-HEALTH
