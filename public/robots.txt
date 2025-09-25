@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Disallow admin and API routes
+Disallow: /api/
+Disallow: /admin/
+Disallow: /.well-known/
+
+# Allow search engines to index the main content
+Allow: /auth/login
+Allow: /auth/signup
+
+# Sitemap location
+Sitemap: https://willing-tree-pi.vercel.app/sitemap.xml
