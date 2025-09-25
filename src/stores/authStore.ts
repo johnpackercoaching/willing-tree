@@ -153,37 +153,58 @@ export const useAuthStore = create<AuthState>()(
 
 // Initialize auth state listener
 let unsubscribe: (() => void) | null = null;
+let isInitializing = false; // Prevent concurrent initialization
+let initializationPromise: Promise<void> | null = null; // Track initialization promise
 
-// Configurable timeout (defaults to 10 seconds instead of 5)
-const AUTH_INIT_TIMEOUT = Number(import.meta.env.VITE_AUTH_INIT_TIMEOUT) || 10000;
+// Configurable timeout (defaults to 15 seconds to avoid conflict with App.tsx 20s timeout)
+const AUTH_INIT_TIMEOUT = Number(import.meta.env.VITE_AUTH_INIT_TIMEOUT) || 15000;
 
-export const initializeAuth = async () => {
-  if (unsubscribe) return; // Already initialized
+export const initializeAuth = async (): Promise<void> => {
+  // Return existing promise if already initializing
+  if (isInitializing && initializationPromise) {
+    return initializationPromise;
+  }
 
-  // Debug logging removed
+  // If already initialized, return immediately
+  if (useAuthStore.getState().isInitialized) {
+    return Promise.resolve();
+  }
 
-  try {
-    // CRITICAL FIX: Initialize Firebase BEFORE setting up auth listeners
-    await initializeFirebase();
+  // CRITICAL FIX: Clean up any existing listener before creating a new one
+  // This ensures we don't have stale listeners after page reload
+  if (unsubscribe) {
+    unsubscribe();
+    unsubscribe = null;
+  }
 
-    // Connect to emulators if needed
-    await connectToEmulators();
+  isInitializing = true;
 
-    // Now get the initialized auth instance
-    const auth = getFirebaseAuth();
+  // Create a promise that resolves when auth is initialized
+  initializationPromise = new Promise<void>((resolve, reject) => {
+    (async () => {
+      try {
+        // CRITICAL FIX: Initialize Firebase BEFORE setting up auth listeners
+        await initializeFirebase();
 
-    // Set a timeout to prevent infinite loading (now 10 seconds by default)
-    const timeoutId = setTimeout(() => {
-      // Debug logging removed
-      useAuthStore.getState().setInitialized(true);
-      useAuthStore.getState().setError('Authentication initialization timed out');
-    }, AUTH_INIT_TIMEOUT);
+        // Connect to emulators if needed
+        await connectToEmulators();
 
-    // Set up the auth state listener
-    unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      clearTimeout(timeoutId); // Clear timeout if auth responds
-      // Debug logging removed
-      useAuthStore.getState().setFirebaseUser(firebaseUser);
+        // Now get the initialized auth instance
+        const auth = getFirebaseAuth();
+
+        // Set a timeout to prevent infinite loading (now 15 seconds by default)
+        const timeoutId = setTimeout(() => {
+          useAuthStore.getState().setInitialized(true);
+          useAuthStore.getState().setError('Authentication initialization timed out');
+          isInitializing = false; // Reset flag on timeout
+          initializationPromise = null;
+          reject(new Error('Authentication initialization timed out'));
+        }, AUTH_INIT_TIMEOUT);
+
+        // Set up the auth state listener
+        unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+          clearTimeout(timeoutId); // Clear timeout if auth responds
+          useAuthStore.getState().setFirebaseUser(firebaseUser);
 
       if (firebaseUser) {
         try {
@@ -209,21 +230,34 @@ export const initializeAuth = async () => {
         useAuthStore.getState().setUser(null);
       }
 
-      // Debug logging removed
       useAuthStore.getState().setInitialized(true);
+
+      // CRITICAL: Resolve the promise when auth is initialized
+      if (initializationPromise) {
+        isInitializing = false;
+        initializationPromise = null;
+        resolve();
+      }
     });
 
     // Auth listener setup was successful
     // If there's no user, auth state will fire immediately and set initialized to true
     // If there is a user, it will fire once the user is loaded
 
-  } catch (error) {
-    // Failed to initialize Firebase
-    // Debug logging removed
-    const message = error instanceof Error ? error.message : 'Failed to initialize authentication';
-    useAuthStore.getState().setError(message);
-    useAuthStore.getState().setInitialized(true); // Set initialized even on error to unblock UI
-  }
+      } catch (error) {
+        // Failed to initialize Firebase
+        // Debug logging removed
+        const message = error instanceof Error ? error.message : 'Failed to initialize authentication';
+        useAuthStore.getState().setError(message);
+        useAuthStore.getState().setInitialized(true); // Set initialized even on error to unblock UI
+        isInitializing = false;
+        initializationPromise = null;
+        reject(error);
+      }
+    })();
+  });
+
+  return initializationPromise;
 };
 
 // Cleanup function
