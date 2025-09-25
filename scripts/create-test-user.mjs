@@ -2,21 +2,60 @@
 /**
  * Create test user in Firebase for E2E tests
  * Run with: node scripts/create-test-user.mjs
+ *
+ * SECURITY: This script reads Firebase configuration from environment variables
+ * Ensure your .env file is properly configured before running
  */
 
 import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { readFileSync, existsSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-// Firebase config from production
+// Load environment variables from .env file
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const envPath = join(dirname(__dirname), '.env');
+
+// Parse .env file
+const envVars = {};
+if (existsSync(envPath)) {
+  const envContent = readFileSync(envPath, 'utf8');
+  envContent.split('\n').forEach(line => {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith('#')) {
+      const [key, ...valueParts] = trimmed.split('=');
+      if (key) {
+        envVars[key.trim()] = valueParts.join('=').trim();
+      }
+    }
+  });
+} else {
+  console.error('❌ .env file not found!');
+  process.exit(1);
+}
+
+// Firebase config from ENVIRONMENT VARIABLES (not hardcoded!)
 const firebaseConfig = {
-  apiKey: "AIzaSyCb0k6P1IdJP3_a2sJPpON3OLczjDJilu4",
-  authDomain: "willing-tree-fork.firebaseapp.com",
-  projectId: "willing-tree-fork",
-  storageBucket: "willing-tree-fork.appspot.com",
-  messagingSenderId: "105791805598",
-  appId: "1:105791805598:web:acf539a97f52cf9bab438f"
+  apiKey: envVars.VITE_FIREBASE_API_KEY,
+  authDomain: envVars.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: envVars.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: envVars.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: envVars.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: envVars.VITE_FIREBASE_APP_ID
 };
+
+// Validate that environment variables are set
+if (!firebaseConfig.apiKey) {
+  console.error('❌ Firebase configuration not found in environment variables!');
+  console.error('Please ensure your .env file contains:');
+  console.error('  VITE_FIREBASE_API_KEY=your-api-key');
+  console.error('  VITE_FIREBASE_AUTH_DOMAIN=your-auth-domain');
+  console.error('  VITE_FIREBASE_PROJECT_ID=your-project-id');
+  console.error('  (and other Firebase config variables)');
+  process.exit(1);
+}
 
 // Test user credentials (same as in tests)
 const TEST_USER = {
@@ -28,7 +67,11 @@ const TEST_USER = {
 };
 
 async function createTestUser() {
-  console.log('🔧 Creating test user for E2E tests...\n');
+  console.log('🚀 Creating test user for Willing Tree...');
+  console.log(`📧 Email: ${TEST_USER.email}`);
+  console.log(`🔐 Password: ${TEST_USER.password}`);
+  console.log(`🏗️  Project: ${firebaseConfig.projectId}`);
+  console.log('=====================================\n');
 
   try {
     // Initialize Firebase
@@ -36,75 +79,61 @@ async function createTestUser() {
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    console.log('✅ Firebase initialized\n');
-
-    // Try to sign in first (user might already exist)
-    console.log(`📝 Checking if user ${TEST_USER.email} already exists...`);
+    // Try to create the user
+    console.log('Creating user in Firebase Auth...');
+    let userCredential;
 
     try {
-      const existingUser = await signInWithEmailAndPassword(auth, TEST_USER.email, TEST_USER.password);
-      console.log('✅ Test user already exists with UID:', existingUser.user.uid);
-      console.log('✅ No action needed - user can be used for tests\n');
-      process.exit(0);
+      userCredential = await createUserWithEmailAndPassword(
+        auth,
+        TEST_USER.email,
+        TEST_USER.password
+      );
+      console.log('✅ User created successfully!');
     } catch (error) {
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-        console.log('User does not exist, creating new user...\n');
+      if (error.code === 'auth/email-already-in-use') {
+        console.log('⚠️  User already exists, signing in instead...');
+        userCredential = await signInWithEmailAndPassword(
+          auth,
+          TEST_USER.email,
+          TEST_USER.password
+        );
+        console.log('✅ Signed in to existing user!');
       } else {
-        console.log('Error checking existing user:', error.message);
+        throw error;
       }
     }
 
-    // Create new user
-    console.log('📝 Creating new user...');
-    const userCredential = await createUserWithEmailAndPassword(auth, TEST_USER.email, TEST_USER.password);
-    const user = userCredential.user;
-
-    console.log('✅ User created successfully!');
-    console.log('   UID:', user.uid);
-    console.log('   Email:', user.email);
-
-    // Create user document in Firestore
-    console.log('\n📝 Creating user profile in Firestore...');
-
-    await setDoc(doc(db, 'users', user.uid), {
-      uid: user.uid,
-      email: user.email,
+    // Create/Update user document in Firestore
+    console.log('Creating user document in Firestore...');
+    const userDoc = {
+      email: TEST_USER.email,
       displayName: TEST_USER.displayName,
-      createdAt: new Date().toISOString(),
-      lastLogin: new Date().toISOString(),
       subscriptionPlan: TEST_USER.subscriptionPlan,
       subscriptionStatus: TEST_USER.subscriptionStatus,
-      subscriptionEndDate: null,
-      emailVerified: false,
-      profileComplete: true,
-      isTestUser: true // Mark as test user for easy cleanup
-    });
+      role: 'user',
+      testAccount: true,
+      createdAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString()
+    };
 
-    console.log('✅ User profile created in Firestore\n');
+    await setDoc(doc(db, 'users', userCredential.user.uid), userDoc, { merge: true });
+    console.log('✅ User document created/updated in Firestore!');
 
-    // Sign out
-    await auth.signOut();
-
-    console.log('🎉 SUCCESS! Test user created and ready for E2E tests');
-    console.log('   Email:', TEST_USER.email);
-    console.log('   Password:', TEST_USER.password);
-    console.log('\nYou can now run E2E tests against production.\n');
+    console.log('\n=====================================');
+    console.log('🎉 Test user setup complete!');
+    console.log('=====================================');
+    console.log('User Details:');
+    console.log(`  UID: ${userCredential.user.uid}`);
+    console.log(`  Email: ${TEST_USER.email}`);
+    console.log(`  Password: ${TEST_USER.password}`);
+    console.log(`  Display Name: ${TEST_USER.displayName}`);
+    console.log('\nYou can now use these credentials in your tests.');
 
     process.exit(0);
-
   } catch (error) {
     console.error('❌ Error creating test user:', error.message);
-
-    if (error.code === 'auth/email-already-in-use') {
-      console.log('\n💡 This email is already registered.');
-      console.log('   If you know the password, update it in tests/helpers/auth.helper.ts');
-      console.log('   Or use a different email address.');
-    } else if (error.code === 'auth/weak-password') {
-      console.log('\n💡 Password is too weak. Use a stronger password.');
-    } else if (error.code === 'auth/invalid-api-key') {
-      console.log('\n💡 Firebase API key is invalid. Check your configuration.');
-    }
-
+    console.error('\nFull error:', error);
     process.exit(1);
   }
 }

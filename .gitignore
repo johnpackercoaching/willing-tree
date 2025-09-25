@@ -47,7 +47,8 @@ playwright-report/
 playwright/.cache/
 
 # Project memory and deployment checklist (contains hardcoded values)
-PROJECT_MEMORY.yaml
+project-memory-willingtree.yaml
+project-memory*.yaml
 PROJECT_MEMORY.*
 .env.vercel-check
 .env.vercel-verify
@@ -65,3 +66,25 @@ test-comprehensive-results.json
 # Backup files
 *.backup
 .gitignore.backup
+playwright/.auth/
+
+# Security: Test scripts that may contain credentials
+test-*.mjs
+create-*.mjs
+reset-*.mjs
+check-*.mjs
+list-*.mjs
+*-password*.mjs
+*firebase-users*.mjs
+
+# Firebase service account keys (CRITICAL)
+serviceAccountKey.json
+firebase-service-account.json
+service-account*.json
+*.key.json
+.keys/
+
+# Exported user data
+users.csv
+auth_data.*
+firebase-users.*
