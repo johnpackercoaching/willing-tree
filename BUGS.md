@@ -4,7 +4,7 @@
 
 ### WTBUG-001-AUTH-RELOAD-TIMEOUT
 
-**Status**: 🔴 OPEN
+**Status**: ✅ FIXED (2025-09-25)
 **Severity**: CRITICAL
 **Discovered**: 2025-09-25
 **Affects**: All authenticated users who refresh their browser
@@ -37,11 +37,21 @@ Application shows "Initialization Error - Application initialization timed out" 
 - Must clear data and re-login
 - Affects browser crash recovery, bookmarks, network interruptions
 
-#### Next Steps for Debugging
-1. Add console logs to track `initializeAuth()` execution
-2. Check for hanging promises or race conditions
-3. Investigate Firebase auth state restoration conflicts
-4. Test IndexedDB state during reload
+#### Resolution
+**Fixed in commit**: c4c0565
+
+**Root Cause**:
+The `initializeAuth()` function was not returning a proper promise that resolved when authentication was ready. Additionally, stale auth listeners persisted after page reload, preventing proper re-initialization.
+
+**Fix Applied**:
+1. Modified `initializeAuth()` to return a promise that resolves when auth state is determined
+2. Clean up existing auth listeners before creating new ones on reload
+3. Added proper initialization tracking to prevent concurrent attempts
+4. Synchronized timeout handling between App.tsx and authStore
+
+**Files Modified**:
+- `src/stores/authStore.ts` - Core fix for promise resolution and listener cleanup
+- `src/App.tsx` - Removed debug logging after fix verification
 
 #### Reference
 Full details available in `project-memory-willingtree.yaml` under `critical_bug_initialization_timeout_2025_09_25`
