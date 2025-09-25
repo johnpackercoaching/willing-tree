@@ -277,6 +277,18 @@ export const SignupPage: FC = () => {
             </div>
           )}
 
+          {/* Legal Agreement Notice */}
+          <div className="text-xs text-center text-gray-600 mb-4">
+            By creating an account, you agree to our{' '}
+            <Link to="/terms" className="text-green-600 hover:text-green-700 underline">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link to="/privacy" className="text-green-600 hover:text-green-700 underline">
+              Privacy Policy
+            </Link>
+          </div>
+
           <div>
             <button
               type="submit"

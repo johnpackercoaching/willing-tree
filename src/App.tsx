@@ -5,7 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import { ErrorBoundary } from './ErrorBoundary';
 import { initializeAuth } from './stores/authStore';
 import { useAuthStore } from './stores/authStore';
-import { NavigationBar } from './components/NavigationBar';
+import { Navigation } from './components/Navigation';
 import { ServiceStatus } from './components/ServiceStatus';
 import { NetworkErrorBoundary } from './components/NetworkErrorBoundary';
 
@@ -19,6 +19,8 @@ import { CreateWantsPage } from './pages/wants/CreateWantsPage';
 import { SelectWillingPage } from './pages/willing/SelectWillingPage';
 import { WeeklyGuessPage } from './pages/scoring/WeeklyGuessPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { TermsPage } from './pages/legal/TermsPage';
+import { PrivacyPage } from './pages/legal/PrivacyPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 
@@ -144,8 +146,8 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-gray-50">
-      <NavigationBar />
-      <main className="safe-area-top">
+      <Navigation />
+      <main className="safe-area-top pb-16 md:pb-0">
         {children}
       </main>
       <ServiceStatus />
@@ -235,6 +237,10 @@ function App() {
             <Route path="/auth/login" element={<LoginPage />} />
             <Route path="/auth/signup" element={<SignupPage />} />
             <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+
+            {/* Legal Pages */}
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
             
             {/* Protected Routes */}
             <Route path="/" element={
@@ -257,6 +263,22 @@ function App() {
               <AuthGuard>
                 <Layout>
                   <CreateWantsPage />
+                </Layout>
+              </AuthGuard>
+            } />
+
+            <Route path="/weekly" element={
+              <AuthGuard>
+                <Layout>
+                  <WeeklyGuessPage />
+                </Layout>
+              </AuthGuard>
+            } />
+
+            <Route path="/profile" element={
+              <AuthGuard>
+                <Layout>
+                  <ProfilePage />
                 </Layout>
               </AuthGuard>
             } />
