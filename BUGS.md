@@ -58,6 +58,55 @@ Full details available in `project-memory-willingtree.yaml` under `critical_bug_
 
 ---
 
+## Production Issues
+
+### WTFIX-001-ROBOTS-TXT
+
+**Status**: 🔴 OPEN
+**Severity**: MEDIUM
+**Discovered**: 2025-09-25
+**Test**: tests/e2e/production-health.spec.ts:40
+
+#### Summary
+No robots.txt file exists, causing the server to return HTML instead of crawling instructions for search engines.
+
+#### Impact
+- Search engines cannot read crawling instructions
+- SEO optimization is compromised
+- May affect search engine indexing
+
+#### Solution
+Create `/public/robots.txt` with:
+```
+User-agent: *
+Allow: /
+Sitemap: https://willing-tree-pi.vercel.app/sitemap.xml
+```
+
+#### Effort
+5 minutes - trivial fix
+
+---
+
+## Test Results Summary
+
+### WTTEST-001-PROD-HEALTH
+
+**Date**: 2025-09-25
+**Result**: 8/13 tests passed
+**Security**: 🟢 EXCELLENT - All security headers configured correctly
+
+#### Key Findings
+- ✅ Security headers (CSP, HSTS, X-Frame-Options) all present
+- ✅ SSL certificate valid until Nov 2025
+- ✅ Performance metrics good (~500ms DOM load)
+- ❌ Missing robots.txt file
+- ❌ Network timeouts (related to WTBUG-001, now fixed)
+
+Full details in `project-memory-willingtree.yaml` under `production_health_test_2025_09_25`
+
+---
+
 ## How to Use This File
 
 When starting a new conversation about a bug, reference the Bug ID (e.g., "WTBUG-001") and Claude Code will:
