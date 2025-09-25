@@ -31,7 +31,9 @@ export function PremiumFeatureExample() {
       return;
     }
     // Navigate to analytics dashboard
-    console.log('Navigating to analytics dashboard...');
+    if (import.meta.env.DEV) {
+      console.log('Navigating to analytics dashboard...');
+    }
   };
 
   const handleCreateInnermost = () => {
@@ -40,7 +42,9 @@ export function PremiumFeatureExample() {
       return;
     }
     // Create new innermost
-    console.log('Creating new innermost...');
+    if (import.meta.env.DEV) {
+      console.log('Creating new innermost...');
+    }
   };
 
   const handleExportData = () => {

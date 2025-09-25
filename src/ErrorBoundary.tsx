@@ -25,11 +25,13 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error to console with timestamp
+    // Log error to console with timestamp (development only)
     const timestamp = new Date().toISOString();
-    console.error(`[${timestamp}] Application Error:`, error);
-    console.error('Error Info:', errorInfo);
-    console.error('Component Stack:', errorInfo.componentStack);
+    if (import.meta.env.DEV) {
+      console.error(`[${timestamp}] Application Error:`, error);
+      console.error('Error Info:', errorInfo);
+      console.error('Component Stack:', errorInfo.componentStack);
+    }
 
     // Update state with error details
     this.setState((prevState) => ({
@@ -63,7 +65,9 @@ export class ErrorBoundary extends Component<Props, State> {
       const recentLogs = existingLogs.slice(-10);
       localStorage.setItem('errorLogs', JSON.stringify(recentLogs));
     } catch (e) {
-      console.error('Failed to log error:', e);
+      if (import.meta.env.DEV) {
+        console.error('Failed to log error:', e);
+      }
     }
   };
 

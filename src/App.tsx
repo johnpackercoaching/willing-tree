@@ -167,7 +167,9 @@ function App() {
         await initializeAuth();
         setIsAppReady(true);
       } catch (error) {
-        console.error('Failed to initialize app:', error);
+        if (import.meta.env.DEV) {
+          console.error('Failed to initialize app:', error);
+        }
         const message = error instanceof Error ? error.message : 'Failed to initialize application';
         setInitError(message);
         setIsAppReady(true); // Set ready even on error to show error UI

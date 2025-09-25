@@ -1,8 +1,11 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app';
-import { getAuth, connectAuthEmulator, type Auth } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator, type Firestore } from 'firebase/firestore';
-import { getFunctions, connectFunctionsEmulator, type Functions } from 'firebase/functions';
+import { getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getFunctions, type Functions } from 'firebase/functions';
 import { getAnalytics, type Analytics } from 'firebase/analytics';
+
+// Check if we're in development mode
+const isDevelopment = import.meta.env.DEV;
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -57,7 +60,9 @@ export async function initializeFirebase(): Promise<void> {
 
         // Initialize Firebase app
         if (!app) {
-          console.log(`Firebase init attempt ${attempt + 1}/${retryDelays.length + 1}`);
+          if (isDevelopment) {
+            console.log(`Firebase init attempt ${attempt + 1}/${retryDelays.length + 1}`);
+          }
           app = initializeApp(firebaseConfig);
         }
 
@@ -66,7 +71,9 @@ export async function initializeFirebase(): Promise<void> {
           try {
             auth = getAuth(app);
           } catch (authError) {
-            console.warn('Auth initialization warning:', authError);
+            if (isDevelopment) {
+              console.warn('Auth initialization warning:', authError);
+            }
             // Continue - app can work without auth in some cases
           }
         }
@@ -75,7 +82,9 @@ export async function initializeFirebase(): Promise<void> {
           try {
             db = getFirestore(app);
           } catch (dbError) {
-            console.warn('Firestore initialization warning:', dbError);
+            if (isDevelopment) {
+              console.warn('Firestore initialization warning:', dbError);
+            }
             // Continue - app can work without db in some cases
           }
         }
@@ -84,7 +93,9 @@ export async function initializeFirebase(): Promise<void> {
           try {
             functions = getFunctions(app);
           } catch (functionsError) {
-            console.warn('Functions initialization warning:', functionsError);
+            if (isDevelopment) {
+              console.warn('Functions initialization warning:', functionsError);
+            }
             // Continue - functions are optional
           }
         }
@@ -93,7 +104,9 @@ export async function initializeFirebase(): Promise<void> {
           try {
             analytics = getAnalytics(app);
           } catch (analyticsError) {
-            console.warn('Analytics initialization warning:', analyticsError);
+            if (isDevelopment) {
+              console.warn('Analytics initialization warning:', analyticsError);
+            }
             // Continue - analytics are optional
           }
         }
@@ -101,7 +114,9 @@ export async function initializeFirebase(): Promise<void> {
         // Mark as initialized even if some services failed
         // The app can work with partial functionality
         isInitialized = true;
-        console.log('Firebase initialized successfully');
+        if (isDevelopment) {
+          console.log('Firebase initialized successfully');
+        }
         return;
       } catch (error) {
         lastError = error as Error;
@@ -114,12 +129,14 @@ export async function initializeFirebase(): Promise<void> {
     }
 
     // All retries failed
-    console.error('Firebase initialization failed after all retries');
-    console.error('Last error:', lastError);
-    console.error('Please check:');
-    console.error('1. Your internet connection');
-    console.error('2. Firebase configuration in .env file');
-    console.error('3. Firebase service status at status.firebase.google.com');
+    if (isDevelopment) {
+      console.error('Firebase initialization failed after all retries');
+      console.error('Last error:', lastError);
+      console.error('Please check:');
+      console.error('1. Your internet connection');
+      console.error('2. Firebase configuration in .env file');
+      console.error('3. Firebase service status at status.firebase.google.com');
+    }
     throw new Error(`Failed to initialize Firebase after ${retryDelays.length} retries: ${lastError?.message || 'Unknown error'}`);
   })();
 
@@ -129,10 +146,12 @@ export async function initializeFirebase(): Promise<void> {
 // Safe getters that provide helpful error messages
 export function getFirebaseApp(): FirebaseApp {
   if (!app) {
-    console.error('Firebase app not initialized. This usually means:')
-    console.error('1. Firebase configuration is missing or invalid');
-    console.error('2. Network issues preventing Firebase initialization');
-    console.error('3. Firebase services are temporarily unavailable');
+    if (isDevelopment) {
+      console.error('Firebase app not initialized. This usually means:');
+      console.error('1. Firebase configuration is missing or invalid');
+      console.error('2. Network issues preventing Firebase initialization');
+      console.error('3. Firebase services are temporarily unavailable');
+    }
     throw new Error('Firebase app not initialized. Call initializeFirebase() first.');
   }
   return app;
@@ -140,15 +159,19 @@ export function getFirebaseApp(): FirebaseApp {
 
 export function getFirebaseAuth(): Auth {
   if (!auth) {
-    console.error('Firebase Auth not initialized');
-    console.error('Attempting to initialize now...');
+    if (isDevelopment) {
+      console.error('Firebase Auth not initialized');
+      console.error('Attempting to initialize now...');
+    }
     // Try to initialize if not done
     if (app) {
       try {
         auth = getAuth(app);
         return auth;
       } catch (error) {
-        console.error('Failed to initialize Auth:', error);
+        if (isDevelopment) {
+          console.error('Failed to initialize Auth:', error);
+        }
       }
     }
     throw new Error('Firebase auth not initialized. Call initializeFirebase() first.');
@@ -158,15 +181,19 @@ export function getFirebaseAuth(): Auth {
 
 export function getFirebaseDb(): Firestore {
   if (!db) {
-    console.error('Firestore not initialized');
-    console.error('Attempting to initialize now...');
+    if (isDevelopment) {
+      console.error('Firestore not initialized');
+      console.error('Attempting to initialize now...');
+    }
     // Try to initialize if not done
     if (app) {
       try {
         db = getFirestore(app);
         return db;
       } catch (error) {
-        console.error('Failed to initialize Firestore:', error);
+        if (isDevelopment) {
+          console.error('Failed to initialize Firestore:', error);
+        }
       }
     }
     throw new Error('Firestore not initialized. Call initializeFirebase() first.');
@@ -176,15 +203,19 @@ export function getFirebaseDb(): Firestore {
 
 export function getFirebaseFunctions(): Functions {
   if (!functions) {
-    console.error('Firebase Functions not initialized');
-    console.error('Attempting to initialize now...');
+    if (isDevelopment) {
+      console.error('Firebase Functions not initialized');
+      console.error('Attempting to initialize now...');
+    }
     // Try to initialize if not done
     if (app) {
       try {
         functions = getFunctions(app);
         return functions;
       } catch (error) {
-        console.error('Failed to initialize Functions:', error);
+        if (isDevelopment) {
+          console.error('Failed to initialize Functions:', error);
+        }
       }
     }
     throw new Error('Firebase functions not initialized. Call initializeFirebase() first.');
@@ -224,38 +255,18 @@ export function getFirebaseStatus(): {
 // Note: These will throw if accessed before initialization
 export { auth, db, functions, analytics };
 
-// Connect to emulators after initialization
+// Connect to emulators after initialization (development only)
 export async function connectToEmulators(): Promise<void> {
+  // Emulator support is disabled in production builds
+  // To avoid any sensitive strings in the production bundle
   if (!import.meta.env.DEV || import.meta.env.VITE_USE_FIREBASE_EMULATORS !== 'true') {
     return;
   }
 
-  // Ensure Firebase is initialized first
-  await initializeFirebase();
-
-  try {
-    // Check if emulators are already connected by attempting to connect
-    // Firebase SDK will throw if already connected
-    if (auth) {
-      connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-    }
-  } catch (error) {
-    // Already connected, ignore
-  }
-
-  try {
-    if (db) {
-      connectFirestoreEmulator(db, 'localhost', 8080);
-    }
-  } catch (error) {
-    // Already connected, ignore
-  }
-
-  try {
-    if (functions) {
-      connectFunctionsEmulator(functions, 'localhost', 5001);
-    }
-  } catch (error) {
-    // Already connected, ignore
+  // Emulator configuration has been removed to prevent localhost references
+  // in production builds. To use emulators in development, configure them
+  // directly in your development environment.
+  if (isDevelopment) {
+    console.warn('Firebase emulators support has been disabled to prevent sensitive data in production builds.');
   }
 }

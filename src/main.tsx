@@ -5,8 +5,12 @@ import { ErrorBoundary } from './ErrorBoundary.tsx'
 import './index.css'
 
 // Global error handlers
+const isDevelopment = import.meta.env.DEV;
+
 window.addEventListener('error', (event) => {
-  console.error('Global error:', event.error);
+  if (isDevelopment) {
+    console.error('Global error:', event.error);
+  }
   // Log to localStorage for debugging
   try {
     const errorLog = {
@@ -22,12 +26,16 @@ window.addEventListener('error', (event) => {
     logs.push(errorLog);
     localStorage.setItem('globalErrors', JSON.stringify(logs.slice(-10)));
   } catch (e) {
-    console.error('Failed to log global error:', e);
+    if (isDevelopment) {
+      console.error('Failed to log global error:', e);
+    }
   }
 });
 
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled promise rejection:', event.reason);
+  if (isDevelopment) {
+    console.error('Unhandled promise rejection:', event.reason);
+  }
   // Log to localStorage for debugging
   try {
     const errorLog = {
@@ -40,7 +48,9 @@ window.addEventListener('unhandledrejection', (event) => {
     logs.push(errorLog);
     localStorage.setItem('globalErrors', JSON.stringify(logs.slice(-10)));
   } catch (e) {
-    console.error('Failed to log unhandled rejection:', e);
+    if (isDevelopment) {
+      console.error('Failed to log unhandled rejection:', e);
+    }
   }
 });
 
@@ -162,7 +172,9 @@ function initializeApp() {
   const root = document.getElementById('root');
 
   if (!root) {
-    console.error('Critical: Root element not found!');
+    if (isDevelopment) {
+      console.error('Critical: Root element not found!');
+    }
     showFallbackUI('Root element not found. The application cannot start.');
     return;
   }
@@ -175,7 +187,9 @@ function initializeApp() {
     const renderTimeout = setTimeout(() => {
       // Check if React has rendered something
       if (root.children.length === 0) {
-        console.error('React failed to render within timeout period');
+        if (isDevelopment) {
+          console.error('React failed to render within timeout period');
+        }
         showFallbackUI('The application failed to render. This might be due to a JavaScript error.');
       }
     }, 5000);
@@ -203,7 +217,9 @@ function initializeApp() {
     });
 
   } catch (error) {
-    console.error('Failed to initialize React application:', error);
+    if (isDevelopment) {
+      console.error('Failed to initialize React application:', error);
+    }
     showFallbackUI(error instanceof Error ? error : new Error('Failed to initialize React'));
   }
 }

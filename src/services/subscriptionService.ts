@@ -1,6 +1,9 @@
 import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import type { User } from '../types/index';
 
+// Check if we're in development mode
+const isDevelopment = import.meta.env.DEV;
+
 // Lazy-load Stripe only when needed
 let stripePromise: Promise<Stripe | null> | null = null;
 
@@ -13,20 +16,28 @@ const getStripe = async (): Promise<Stripe | null> => {
   const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
   if (!stripeKey || stripeKey === 'undefined' || stripeKey === '') {
-    console.warn('Stripe publishable key not configured. Payment functionality will be disabled.');
+    if (isDevelopment) {
+      console.warn('Stripe publishable key not configured. Payment functionality will be disabled.');
+    }
     return null;
   }
 
   // Lazy initialization - only load Stripe when first needed
   if (!stripePromise) {
     try {
-      console.log('Loading Stripe SDK...');
+      if (isDevelopment) {
+        console.log('Loading Stripe SDK...');
+      }
       stripePromise = loadStripe(stripeKey).catch((error) => {
-        console.error('Failed to load Stripe SDK:', error);
+        if (isDevelopment) {
+          console.error('Failed to load Stripe SDK:', error);
+        }
         return null;
       });
     } catch (error) {
-      console.error('Error initializing Stripe:', error);
+      if (isDevelopment) {
+        console.error('Error initializing Stripe:', error);
+      }
       stripePromise = Promise.resolve(null);
     }
   }
@@ -167,7 +178,9 @@ export class SubscriptionService {
       return { sessionId };
 
     } catch (error) {
-      console.error('Stripe checkout session creation failed:', error);
+      if (isDevelopment) {
+        console.error('Stripe checkout session creation failed:', error);
+      }
       throw new Error('Unable to start checkout process. Please try again.');
     }
   }
@@ -203,12 +216,16 @@ export class SubscriptionService {
       const { error } = await stripe.redirectToCheckout({ sessionId });
 
       if (error) {
-        console.error('Stripe redirect error:', error);
+        if (isDevelopment) {
+          console.error('Stripe redirect error:', error);
+        }
         throw new Error(error.message || 'Checkout redirect failed');
       }
 
     } catch (error) {
-      console.error('Checkout error:', error);
+      if (isDevelopment) {
+        console.error('Checkout error:', error);
+      }
       // Provide user-friendly error message
       if (error instanceof Error && error.message.includes('Payment')) {
         throw error; // Re-throw our custom error messages
@@ -241,7 +258,9 @@ export class SubscriptionService {
       return message;
       
     } catch (error) {
-      console.error('Subscription cancellation failed:', error);
+      if (isDevelopment) {
+        console.error('Subscription cancellation failed:', error);
+      }
       throw new Error('Unable to cancel subscription. Please contact support.');
     }
   }
@@ -288,7 +307,9 @@ export class SubscriptionService {
       };
 
     } catch (error) {
-      console.error('Failed to fetch billing info:', error);
+      if (isDevelopment) {
+        console.error('Failed to fetch billing info:', error);
+      }
       // Fall back to user data on error
       return {
         status: user.subscriptionStatus === 'premium' ? 'active' : 'canceled',

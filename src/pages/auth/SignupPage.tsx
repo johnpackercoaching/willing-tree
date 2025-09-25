@@ -45,7 +45,9 @@ export const SignupPage: FC = () => {
       reset();
       navigate('/dashboard');
     } catch (error) {
-      console.error('Signup error:', error);
+      if (import.meta.env.DEV) {
+        console.error('Signup error:', error);
+      }
       const message = error instanceof Error ? error.message : 'Failed to create account';
       toast.error(message);
     }

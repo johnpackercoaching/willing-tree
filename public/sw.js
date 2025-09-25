@@ -13,11 +13,11 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Opened cache');
+        // Silent in production
         return cache.addAll(urlsToCache);
       })
       .catch((error) => {
-        console.error('Failed to cache resources during install:', error);
+        // Silent error handling in production
       })
   );
   // Force the waiting service worker to become the active service worker
@@ -31,7 +31,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
+            // Silent cache deletion in production
             return caches.delete(cacheName);
           }
         })
@@ -92,7 +92,7 @@ self.addEventListener('fetch', (event) => {
           });
       })
       .catch((error) => {
-        console.error('Fetch failed:', error);
+        // Silent fetch error in production
         // You could return a custom offline page here
       })
   );

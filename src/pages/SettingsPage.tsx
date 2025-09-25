@@ -57,7 +57,9 @@ export const SettingsPage: FC = () => {
       try {
         setSettings(JSON.parse(saved));
       } catch (error) {
-        console.error('Error loading settings:', error);
+        if (import.meta.env.DEV) {
+          console.error('Error loading settings:', error);
+        }
       }
     }
   };
@@ -70,7 +72,9 @@ export const SettingsPage: FC = () => {
       const info = await SubscriptionService.getBillingInfo(user);
       setBillingInfo(info);
     } catch (error) {
-      console.error('Error loading billing info:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading billing info:', error);
+      }
     } finally {
       setLoadingBilling(false);
     }
@@ -89,7 +93,9 @@ export const SettingsPage: FC = () => {
       await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
       
     } catch (error) {
-      console.error('Error saving setting:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error saving setting:', error);
+      }
       toast.error('Failed to save setting');
       // Revert on error
       setSettings(settings);
@@ -141,7 +147,9 @@ export const SettingsPage: FC = () => {
       toast.success('Data exported successfully!');
 
     } catch (error) {
-      console.error('Error exporting data:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error exporting data:', error);
+      }
       toast.error('Failed to export data');
     }
   };
@@ -154,7 +162,9 @@ export const SettingsPage: FC = () => {
       toast.success('Subscription cancelled successfully');
       loadBillingInfo(); // Refresh billing info
     } catch (error) {
-      console.error('Error cancelling subscription:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error cancelling subscription:', error);
+      }
       toast.error('Failed to cancel subscription');
     }
   };
