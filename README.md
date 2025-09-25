@@ -1,284 +1,263 @@
-# Willing Box - Relationship Growth App
+# 🌳 Willing Tree - Relationship Growth App
 
-A hybrid PWA for couples to grow their relationships through weekly intentional actions.
+A modern web application for couples to strengthen their relationships through weekly intentional actions and mutual understanding.
 
-## 🚀 Live Demo
+## 🚨 Current Status
 
-**Production URL**: https://willing-tree-pi.vercel.app
+**⚠️ PRODUCTION BLOCKED** - Security incident remediation in progress
+- **Local Development**: ✅ Fully functional
+- **Production**: ❌ Awaiting API key update in Vercel
+- **Last Incident**: 2024-09-24 - Firebase API keys rotated (local fixed, production pending)
 
-## 📦 Deployment Status
+## 🚀 Quick Start
 
-- **Platform**: Vercel
-- **Firebase Project**: willing-tree-fork
-- **Auto-Deploy**: Enabled (pushes to main branch auto-deploy)
+```bash
+# Clone and install
+git clone https://github.com/johnpackercoaching/willing-tree.git
+cd willing-tree
+npm install
+
+# Setup environment variables
+cp .env.example .env
+# Add your Firebase configuration to .env
+
+# Start development server
+npm run dev
+# Visit http://localhost:5173
+```
+
+## 📱 Live Demo & Deployment
+
+- **Production URL**: https://willing-tree-pi.vercel.app (currently down - API key expired)
+- **Platform**: Vercel with automated deployments from `main` branch
+- **Firebase Project**: `willing-tree-fork`
 
 ## 🎯 Core Concept
 
-**Willing Tree** helps couples create deeper connections through:
+**Willing Tree** helps couples create deeper connections through a unique privacy-preserving game:
 
-- **12-item Wishlists**: Each partner creates wishes for what they'd like from their partner
-- **Partner's Wishes ARE Visible**: You can see what your partner wishes for
-- **5-item Willing Lists**: Secretly select from your PARTNER'S wishlist what you're willing to do
-- **Weekly Guessing Game**: Partners guess what the other was willing to work on
-- **Privacy Where It Matters**: Willing selections remain private to preserve autonomy
+### How It Works
 
-## 🎮 Complete Game Flow - Step by Step
+1. **Create Wishes** - Each partner lists 12 things they wish for from their partner
+2. **See Partner's Wishes** - View what your partner wishes for (promotes understanding)
+3. **Select Willing Items** - Secretly choose 5 from your PARTNER's wishlist to work on
+4. **Weekly Action** - Work on your selected items throughout the week
+5. **Guess & Score** - Partners guess what each other selected, earning points for correct guesses
+6. **Privacy Preserved** - Willing selections remain private, preventing coercion
 
-### Phase 1: Getting Started
-1. **Sign Up** → Create account with email and password
-2. **Profile Setup** → Enter name, age, gender (helps with AI suggestions)
-3. **Pair with Partner** → Send invite via email or share QR code
-4. **Partner Accepts** → Both partners are now connected in an "Innermost"
-
-### Phase 2: Creating Wishlists (One-Time Setup)
-5. **Create Your Wishlist** → Write 12 wishes of what you'd like from your partner
-   - Example: "I wish you would give me a hug when you come home"
-   - AI suggests age/gender-appropriate wishes if you need ideas
-   - Mark 2 wishes as "Most Wanted" (worth double points)
-6. **Partner Creates Their Wishlist** → Your partner does the same
-7. **Review Partner's Wishes** → You can now SEE what your partner wishes for
-   - This promotes understanding and communication
-   - You learn what matters to your partner
-
-### Phase 3: Weekly Cycle (Repeats Every Week)
-
-#### Monday - Selection Day
-8. **Select Your Willing List** → SECRETLY choose 5 items from your PARTNER'S wishlist
-   - You're choosing what you're willing to work on this week
-   - Rank them 1-5 by priority
-   - Your partner CANNOT see your selections (privacy preserved)
-9. **Partner Selects Too** → They secretly choose from YOUR wishlist
-
-#### Tuesday-Saturday - Action Days  
-10. **Work on Your Willing Items** → Throughout the week, do the things you selected
-    - No pressure or monitoring from partner
-    - Work at your own pace
-    - Focus on the items you prioritized
-
-#### Sunday - Guessing & Reveal Day
-11. **Guess Partner's Willing** → Look at YOUR wishlist and guess which 5 items your partner selected
-    - "I think they were willing to work on these 5 wishes of mine"
-12. **Partner Guesses Too** → They guess which of their wishes you selected
-13. **See Results** → The app reveals:
-    - What you guessed vs. what they actually selected
-    - What they guessed vs. what you actually selected
-    - Points earned (see scoring below)
-14. **Review & Reflect** → Discuss what worked, celebrate efforts
-
-### Phase 4: Continue Growing
-15. **Next Week** → Return to Phase 3, Step 8
-    - Keep the same wishlists for consistency
-    - Select new willing items based on what you learned
-    - Build momentum week after week
-
-### Scoring System
-- **Correct Guess**: 1 point (2 points if it was a "Most Wanted" item)
-- **Partner Guessed You Correctly**: 2 points (4 points if "Most Wanted")
-- **Why?** This rewards DOING the behaviors more than monitoring your partner
-
-### What Makes This Special
-- **Wishes are visible** → Promotes open communication about needs
-- **Willing is private** → Preserves autonomy and prevents coercion
+### Why It's Different
+- **Wishes are visible** → Promotes open communication
+- **Willing is private** → Preserves autonomy
+- **Gamification** → Makes relationship work engaging
 - **Weekly cycles** → Creates sustainable habits
-- **Gamification** → Makes relationship work fun and engaging
 
-## 🏗️ Architecture
+## 🏗️ Architecture & Tech Stack
 
-### Hybrid PWA + Native Apps
+### Current Implementation
+
 ```
-React PWA (Core) + Capacitor.js (Native Wrapper)
-├── Web: Installable PWA with offline support
-├── iOS: Native app via Capacitor  
-├── Android: Native app via Capacitor
-└── Single codebase for all platforms
-```
-
-### Tech Stack
-- **Frontend**: React 19 + TypeScript + Tailwind CSS
-- **State**: Zustand + React Query  
-- **Backend**: Firebase (Auth, Firestore, Functions)
-- **Payments**: Stripe ($1/month subscription)
-- **Mobile**: Capacitor.js for native features
-- **Animations**: Framer Motion
-
-## 🔐 Privacy & Scoring Rules
-
-### Privacy Rules (CRITICAL)
-- Partners **NEVER** see each other's Willing lists
-- This preserves autonomy and prevents prescriptive behavior
-- Only your own Willing list is visible to you
-
-### Scoring System  
-- **Guesser**: 1 point per correct guess (2 if "Most Wanted")
-- **Performer**: 2 points per correct guess about them (4 if "Most Wanted")
-- **Incentive**: Rewards performing behaviors over monitoring partner
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js 18+
-- npm or yarn
-- iOS: Xcode (for iOS development)
-- Android: Android Studio (for Android development)
-
-### Development Setup
-
-1. **Clone and Install**
-```bash
-git clone [repository-url]
-cd willing-box-pwa
-npm install
+Frontend (70% Complete)          Backend (0% Complete)
+├── React 19.1 + TypeScript      ├── ❌ API Endpoints
+├── Tailwind CSS 4.1             ├── ❌ Stripe Webhooks
+├── Zustand + React Query        ├── ❌ Email Service
+├── Firebase Auth/Firestore      ├── ❌ Cloud Functions
+├── Vite 7.1 Build System        └── ❌ SMS Service
+└── PWA + Capacitor Ready
 ```
 
-2. **Environment Variables**
-```bash
-cp .env.local.example .env.local
-# Edit .env.local with your Firebase and Stripe keys
-```
+### Technology Stack
+- **Frontend Framework**: React 19.1.1 with TypeScript
+- **Styling**: Tailwind CSS 4.1.12
+- **State Management**: Zustand 5.0.8 + React Query
+- **Database**: Firebase Firestore with real-time sync
+- **Authentication**: Firebase Auth (email/password)
+- **Payments**: Stripe integration (frontend ready, backend missing)
+- **Build Tool**: Vite 7.1.2
+- **Deployment**: Vercel + GitHub Actions
 
-3. **Start Development Server**
-```bash
-npm run dev
-```
+## ✅ What's Actually Working
 
-4. **Add Mobile Platforms** (optional)
-```bash
-# iOS
-npm run cap:add ios
-npm run ios
+### Core Features
+- ✅ **Complete user authentication** (signup, login, password reset)
+- ✅ **Full game flow** (wishes → willing → guessing → scoring)
+- ✅ **Partner pairing system** (create and manage relationships)
+- ✅ **Real-time data sync** between partners
+- ✅ **Weekly cycle management** with automatic progression
+- ✅ **Scoring system** with correct implementation
+- ✅ **Mobile-responsive design** with PWA support
 
-# Android  
-npm run cap:add android
-npm run android
-```
+### Premium System (Frontend Only)
+- ✅ **Subscription tiers defined** (Free: 1 innermost, Premium: 3)
+- ✅ **Feature gating hooks** (`usePremiumFeature`)
+- ✅ **Upgrade prompts** throughout the app
+- ⚠️ **Payment processing** configured but no backend
 
-### Firebase Setup
+## 🚧 Partially Implemented
 
-1. Create a Firebase project at https://console.firebase.google.com
-2. Enable Authentication (Email/Password)
-3. Create Firestore database
-4. Copy config to `.env.local`
+### Analytics Dashboard
+- ✅ UI complete with charts
+- ❌ Shows mock data only
+- ❌ No real data integration
 
-### Stripe Setup
+### Email/SMS Invitations
+- ✅ Service layer exists
+- ❌ No actual sending capability
+- ❌ Requires backend implementation
 
-1. Create a Stripe account at https://stripe.com
-2. Create a product with $1/month recurring price
-3. Copy publishable key to `.env.local`
+### Data Export
+- ✅ UI shows export option
+- ❌ No actual export functionality
+- ❌ Premium feature not implemented
 
-## 📱 Features
+## ❌ Not Yet Implemented
 
-### ✅ Completed
-- **Hybrid PWA Foundation**: Vite + React + TypeScript
-- **Core Business Logic**: Scoring engine with privacy rules
-- **State Management**: Zustand stores with persistence
-- **Authentication**: Firebase Auth integration
-- **Subscription System**: Stripe integration ($1/month)
-- **Responsive Design**: Mobile-first with safe areas
-- **PWA Features**: Manifest, service worker, installable
+### Critical Missing Pieces
+- **Backend API Server** - No endpoints exist
+- **Payment Processing** - Cannot charge cards
+- **Email Notifications** - Cannot send emails
+- **Push Notifications** - Not configured
+- **Cloud Functions** - No serverless functions
+- **Mobile Apps** - Capacitor configured but not built
 
-### 🚧 In Development  
-- Complete UI for all user flows
-- Firebase security rules
-- Backend cloud functions
-- Push notifications
+### Features Requiring Backend
+- Weekly reminder emails
+- Partner invitation emails
+- Subscription management
+- Payment webhook handling
+- Data export functionality
 - Advanced analytics
 
-## 🏃‍♂️ Usage
+## 🔐 Security & Privacy
 
-### Quick User Flow Summary
-1. **Sign Up**: Create account with email/password
-2. **Pair**: Invite partner via email or QR code  
-3. **Create Wishlist**: Each partner lists 12 wishes
-4. **View Partner's Wishes**: See what your partner wishes for
-5. **Select Willing**: Secretly pick 5 from PARTNER'S wishlist
-6. **Weekly Cycle**: 
-   - Work on selected items
-   - Guess partner's selections
-   - Reveal scores
-   - Select new willing items next week
+### Current Security Status
+- ✅ **Comprehensive security headers** in vercel.json
+- ✅ **Firebase security rules** configured
+- ✅ **Authentication** properly implemented
+- ⚠️ **API Key Rotation** - Complete locally, production pending
+- ❌ **Rate limiting** - Placeholder only, not functional
 
-### Subscription Model
-- **Free**: 1 Innermost (relationship pairing)
-- **Premium** ($1/month): Up to 3 Innermosts + analytics
+### Recent Security Incident (2024-09-24)
+- **Issue**: Firebase API keys exposed in git history
+- **Resolution**: Keys rotated, history cleaned
+- **Status**: Local environment secure, production needs update
 
 ## 🛠️ Development Setup
 
 ### Prerequisites
-- Node.js 20+ and npm 10+
+- Node.js 20+
+- npm 10+
 - Firebase account
 - Vercel account (for deployment)
 
 ### Environment Variables
-Create a `.env.local` file with:
+
+Create `.env` file:
 ```env
-VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_API_KEY=your_api_key_here
 VITE_FIREBASE_AUTH_DOMAIN=willing-tree-fork.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=willing-tree-fork
 VITE_FIREBASE_STORAGE_BUCKET=willing-tree-fork.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=105791805598
-VITE_FIREBASE_APP_ID=your_app_id
+VITE_FIREBASE_APP_ID=your_app_id_here
 ```
 
-### Development Commands
+### Available Commands
 
 ```bash
 # Development
-npm install             # Install dependencies
-npm run dev              # Start dev server
-npm run build           # Build for production  
+npm run dev              # Start dev server (http://localhost:5173)
+npm run build           # Build for production
 npm run preview         # Preview production build
-npm run lint           # Run ESLint
+npm run lint            # Run ESLint
+npm run test            # Run tests (minimal coverage)
 
-# Mobile Development
-npm run ios            # Build and run iOS app
-npm run android        # Build and run Android app  
-npm run cap:sync       # Sync web assets to mobile
-npm run cap:copy       # Copy web assets only
+# Deployment
+npm run build:vercel    # Build for Vercel
+npm run deploy          # Deploy to Vercel
 
-# Production
-npm run build:prod     # Full production build with linting
+# Mobile (Configured but not tested)
+npm run ios             # Build iOS app
+npm run android         # Build Android app
 ```
 
-## 🎨 Design System
+## 📊 Project Completion Status
 
-### Colors (Organic Growth Theme)
-- **Tree Green** (#4A8B4A): Primary actions and growth elements
-- **Bark Brown** (#8B6F47): Warm accents and earth tones  
-- **Stone Grey** (#6B7280): Text and neutral elements
-- **Background** (#FAF7F5): Warm bark-tinted background
-- **Text** (#1F2937): High-contrast readable text
+| Component | Status | Progress | Notes |
+|-----------|---------|----------|-------|
+| **Frontend UI** | 🟢 Working | 85% | All major flows complete |
+| **Authentication** | 🟢 Working | 100% | Firebase Auth fully integrated |
+| **Database** | 🟢 Working | 90% | Firestore with real-time sync |
+| **Game Logic** | 🟢 Working | 95% | Core mechanics implemented |
+| **Premium Features** | 🟡 Partial | 40% | Frontend only, no payment processing |
+| **Backend API** | 🔴 Missing | 0% | No server exists |
+| **Email Service** | 🔴 Missing | 0% | Code exists, not functional |
+| **Payment Processing** | 🔴 Missing | 0% | Stripe configured, no backend |
+| **Mobile Apps** | 🟡 Configured | 20% | Capacitor ready, not built |
+| **Analytics** | 🟡 Mock Only | 30% | UI complete, fake data |
 
-### Breakpoints
-- **Mobile**: < 640px (primary target)
-- **Tablet**: 640px - 1024px  
-- **Desktop**: > 1024px
+**Overall Completion: ~35%** (Strong frontend, no backend)
 
-## 📊 Business Model
+## 🎯 Immediate Next Steps
 
-**Revenue**: $1/user/month subscription
+### 🚨 Critical (Deployment Blockers)
+1. **Update Vercel environment variables** with new Firebase API key
+2. **Test production deployment** after credential update
+3. **Implement rate limiting** in Firestore rules
 
-**Target**: 500 paying users = $500/month break-even
+### 📈 High Priority (Make It Work)
+1. **Create backend API** with Express/Next.js API routes
+2. **Implement Stripe webhooks** for payment processing
+3. **Setup email service** (SendGrid/Resend)
+4. **Add real data to analytics**
 
-**Projections**:
-- 10,000 users × 20% conversion = 2,000 paid × $1 = $2,000/month
-- Break-even at ~500 paying users
-
-## 🔒 Security Features
-
-- Firebase Authentication with security rules
-- Stripe PCI-compliant payment processing  
-- HTTPS everywhere (required for PWA)
-- Content Security Policy headers
-- XSS and CSRF protection
-
-## 📝 License
-
-Private - All rights reserved.
+### ⭐ Medium Priority (Polish)
+1. **Build and test mobile apps**
+2. **Implement push notifications**
+3. **Add comprehensive testing**
+4. **Create cloud functions for automation**
 
 ## 🤝 Contributing
 
-This is a private project. Contact the development team for contribution guidelines.
+This is a private project. The codebase needs:
+- Backend API implementation
+- Payment processing setup
+- Email service integration
+- Comprehensive testing
+- Security hardening
+
+## 📝 Technical Debt
+
+- **No backend infrastructure** - Biggest gap
+- **Mock data in analytics** - Needs real integration
+- **Minimal test coverage** - Only 2 test files
+- **Field naming inconsistencies** - wishList vs wishlist
+- **No error recovery** - API failures not handled gracefully
+
+## 🔍 Known Issues
+
+1. **Production is down** - API key expired, awaiting update
+2. **Payments don't work** - No backend to process
+3. **Emails don't send** - Service not implemented
+4. **Analytics show fake data** - Not connected to real data
+5. **Rate limiting disabled** - Security concern
+
+## 📈 Business Model
+
+**Target**: Couples seeking to strengthen their relationships
+
+**Pricing**:
+- **Free Tier**: 1 relationship (innermost)
+- **Premium**: $1/month for 3 relationships + analytics
+
+**Current Status**: Frontend shows pricing, but cannot accept payments
+
+## 🏁 Summary
+
+Willing Tree is a **well-designed frontend prototype** with excellent UX and solid technical foundation. The core relationship game is fully implemented in the browser, but the application lacks the backend infrastructure needed for production use. The immediate priority is updating production credentials and implementing a basic API server for payments and emails.
+
+**Ready for**: Demo, user testing, frontend development
+**Not ready for**: Production launch, accepting payments, sending emails
 
 ---
 
-**Built with ❤️ for relationship growth**
+*Last updated: 2024-09-24 after security incident remediation and comprehensive analysis*

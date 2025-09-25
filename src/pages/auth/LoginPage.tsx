@@ -174,23 +174,6 @@ export const LoginPage = () => {
           >
             Sign In
           </Button>
-          
-          {/* Test Account Button - Remove in production */}
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => {
-                const form = document.getElementById('email') as HTMLInputElement;
-                const pass = document.getElementById('password') as HTMLInputElement;
-                if (form) form.value = 'demo@willingtree.app';
-                if (pass) pass.value = 'demo123456';
-                toast.success('Demo credentials filled! Click Sign In to continue. 🌳');
-              }}
-              className="text-xs text-tree-600 hover:text-tree-700 underline"
-            >
-              Use demo account (demo@willingtree.app)
-            </button>
-          </div>
 
           {/* Divider */}
           <div className="relative">
