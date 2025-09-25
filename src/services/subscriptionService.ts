@@ -95,7 +95,11 @@ export class SubscriptionService {
    * Check if user can access premium features
    */
   static canAccessPremiumFeatures(user: User): boolean {
-    return user.subscriptionStatus === 'premium' && 
+    // TEMPORARY: All users get premium features until billing is set up
+    // TODO: Remove this override when Stripe backend is implemented
+    if (true) return true; // <-- SINGLE SWITCH: Set to false to require billing
+
+    return user.subscriptionStatus === 'premium' &&
            (!user.subscriptionEndDate || user.subscriptionEndDate > new Date());
   }
 
@@ -250,6 +254,15 @@ export class SubscriptionService {
     currentPeriodEnd?: Date;
     cancelAtPeriodEnd?: boolean;
   }> {
+    // TEMPORARY: Skip API call until billing backend is implemented
+    // TODO: Remove this when Stripe backend is ready
+    return {
+      status: 'active', // Always return active for now
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+      cancelAtPeriodEnd: false
+    };
+
+    /* ORIGINAL CODE - Uncomment when backend is ready:
     try {
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
       const response = await fetch(`${apiBaseUrl}/api/billing-info/${user.id}`, {
@@ -273,7 +286,7 @@ export class SubscriptionService {
         currentPeriodEnd: billingInfo.currentPeriodEnd ? new Date(billingInfo.currentPeriodEnd) : undefined,
         cancelAtPeriodEnd: billingInfo.cancelAtPeriodEnd || false
       };
-      
+
     } catch (error) {
       console.error('Failed to fetch billing info:', error);
       // Fall back to user data on error
@@ -283,6 +296,7 @@ export class SubscriptionService {
         cancelAtPeriodEnd: false
       };
     }
+    */
   }
 
   /**
