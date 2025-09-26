@@ -206,39 +206,41 @@ export const initializeAuth = async (): Promise<void> => {
           clearTimeout(timeoutId); // Clear timeout if auth responds
           useAuthStore.getState().setFirebaseUser(firebaseUser);
 
-      if (firebaseUser) {
-        try {
-          // Fetch real user data from Firestore
-          const user = await FirestoreService.getUserProfile(firebaseUser.uid);
+          // Mark auth as initialized as soon as Firebase returns a user state
+          // We resolve the initialization promise before any Firestore calls so
+          // the app doesn't hang waiting for secondary network requests.
+          useAuthStore.getState().setInitialized(true);
 
-          if (user) {
-            // Debug logging removed
-            useAuthStore.getState().setUser(user);
+          if (initializationPromise) {
+            isInitializing = false;
+            initializationPromise = null;
+            resolve();
+          }
+
+          if (firebaseUser) {
+            try {
+              // Fetch real user data from Firestore
+              const user = await FirestoreService.getUserProfile(firebaseUser.uid);
+
+              if (user) {
+                // Debug logging removed
+                useAuthStore.getState().setUser(user);
+              } else {
+                // User exists in Firebase Auth but not in Firestore
+                // This shouldn't happen in normal flow, but handle gracefully
+                // Debug logging removed
+                useAuthStore.getState().setUser(null);
+              }
+            } catch (error) {
+              // Debug logging removed
+              useAuthStore.getState().setError('Failed to load user profile');
+              useAuthStore.getState().setUser(null);
+            }
           } else {
-            // User exists in Firebase Auth but not in Firestore
-            // This shouldn't happen in normal flow, but handle gracefully
             // Debug logging removed
             useAuthStore.getState().setUser(null);
           }
-        } catch (error) {
-          // Debug logging removed
-          useAuthStore.getState().setError('Failed to load user profile');
-          useAuthStore.getState().setUser(null);
-        }
-      } else {
-        // Debug logging removed
-        useAuthStore.getState().setUser(null);
-      }
-
-      useAuthStore.getState().setInitialized(true);
-
-      // CRITICAL: Resolve the promise when auth is initialized
-      if (initializationPromise) {
-        isInitializing = false;
-        initializationPromise = null;
-        resolve();
-      }
-    });
+        });
 
     // Auth listener setup was successful
     // If there's no user, auth state will fire immediately and set initialized to true

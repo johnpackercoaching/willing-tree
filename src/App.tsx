@@ -93,7 +93,7 @@ const InitializationError = ({ error }: { error: string }) => (
 
 // Auth Guard Component with better error handling
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
-  const { user, isInitialized, error } = useAuthStore();
+  const { user, firebaseUser, isInitialized, error } = useAuthStore();
   const [authTimeout, setAuthTimeout] = useState(false);
 
   useEffect(() => {
@@ -124,6 +124,12 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   // Show error if there's a critical auth error
   if (error && error.includes('critical')) {
     return <InitializationError error={error} />;
+  }
+
+  // If Firebase has authenticated the user but we're still loading the profile data,
+  // keep the guard in a loading state so we don't incorrectly redirect to login.
+  if (firebaseUser && !user && !error) {
+    return <LoadingSpinner message="Loading your profile..." />;
   }
 
   // Redirect to login if not authenticated
